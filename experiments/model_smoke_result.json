@@ -1,0 +1,74 @@
+[
+  {
+    "outcome": "blocked",
+    "usage": {
+      "input_tokens": 2791,
+      "output_tokens": 134
+    },
+    "valid": true,
+    "roundtrip_equal": true,
+    "response_metadata": {
+      "finish_reason": "tool_calls",
+      "model": "deepseek-flash",
+      "mode": "function_calling",
+      "schema_adapter_version": "1.0",
+      "transport_schema_hash": "5c4fac3bd83d54e5ab6f4bf65c6d9e78143274f286d1f232626a81de39163318",
+      "wrapped_root": false
+    },
+    "provider_request_id": "b7d22e22-56e2-4820-94c8-2864e4da98a4"
+  },
+  {
+    "outcome": "graph",
+    "usage": {
+      "input_tokens": 3696,
+      "output_tokens": 1039
+    },
+    "valid": true,
+    "roundtrip_equal": true,
+    "response_metadata": {
+      "finish_reason": "tool_calls",
+      "model": "deepseek-flash",
+      "mode": "function_calling",
+      "schema_adapter_version": "1.0",
+      "transport_schema_hash": "5c4fac3bd83d54e5ab6f4bf65c6d9e78143274f286d1f232626a81de39163318",
+      "wrapped_root": false
+    },
+    "provider_request_id": "c7a510dc-5933-47e8-a26e-38b40eb55a9c"
+  },
+  {
+    "outcome": "graph",
+    "usage": {
+      "input_tokens": 3295,
+      "output_tokens": 638
+    },
+    "valid": true,
+    "roundtrip_equal": true,
+    "response_metadata": {
+      "finish_reason": "tool_calls",
+      "model": "deepseek-flash",
+      "mode": "function_calling",
+      "schema_adapter_version": "1.0",
+      "transport_schema_hash": "5c4fac3bd83d54e5ab6f4bf65c6d9e78143274f286d1f232626a81de39163318",
+      "wrapped_root": false
+    },
+    "provider_request_id": "3179225c-543a-4bfd-badc-bb2419703057"
+  },
+  {
+    "outcome": "graph",
+    "usage": {
+      "input_tokens": 3174,
+      "output_tokens": 517
+    },
+    "valid": true,
+    "roundtrip_equal": true,
+    "response_metadata": {
+      "finish_reason": "tool_calls",
+      "model": "deepseek-flash",
+      "mode": "function_calling",
+      "schema_adapter_version": "1.0",
+      "transport_schema_hash": "5c4fac3bd83d54e5ab6f4bf65c6d9e78143274f286d1f232626a81de39163318",
+      "wrapped_root": false
+    },
+    "provider_request_id": "f91f12be-9177-4903-96ef-b906d6149fab"
+  }
+]

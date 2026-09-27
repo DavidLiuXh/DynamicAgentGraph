@@ -1,0 +1,52 @@
+{
+  "started_at": "2026-09-11T11:23:07.145228+00:00",
+  "model": {
+    "model": "deepseek-flash",
+    "mode": "function_calling",
+    "adapter_version": "1.0",
+    "max_output_tokens": 16384
+  },
+  "versions": {
+    "prompt_version": "1.0",
+    "prompt_hash": "dfa2b181cf06c1aabb4069ec7eec9f4399903678f44b01c7d7d89f991d9b401d",
+    "repair_hash": "23d4f71007165362933c3fcfabbe6331265edd88f9405f41d640806b56b571d0",
+    "schema_hash": "8f01445076085231fd9e42ac3857c845714b6db04f22cbf2da80b40d500b738f",
+    "dsl_version": "1.0",
+    "examples_hash": "e9bf1cdc4a2d85d3569a3bda673153a6d9fa613ba0dedc18964a438e34705d1b"
+  },
+  "runs": [
+    {
+      "case": "literature",
+      "category": "research",
+      "repeat": 1,
+      "run_id": "6018e58f2e01443f8c37baa01f69eaad",
+      "first_valid": false,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 3,
+        "tool_calls": 2,
+        "duration_seconds": 13.643923841998912,
+        "cost": null,
+        "input_tokens": 11352,
+        "known_input_tokens": 11352,
+        "output_tokens": 2361,
+        "known_output_tokens": 2361,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112307Z/6018e58f2e01443f8c37baa01f69eaad"
+    }
+  ],
+  "quota_exhausted": false,
+  "summary": {
+    "runs": 1,
+    "first_valid": 0,
+    "graph_valid": 1,
+    "completed": 1,
+    "caller_accepted": 1
+  }
+}

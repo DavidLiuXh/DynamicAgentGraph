@@ -1,0 +1,199 @@
+{
+  "status": "passed",
+  "working_directory": "/var/folders/9l/l6j86wws29s2sn0rx9y2s9p00000gn/T/dynamic-graph-final-wheel-1tbassmo",
+  "installed_module": "/Users/lw/opensource/DynamicAgentGraph/.venv-wheel/lib/python3.12/site-packages/dynamic_graph/__init__.py",
+  "python": "Python 3.12.4",
+  "wheel": "dist/dynamic_agent_graph-0.1.0-py3-none-any.whl",
+  "wheel_sha256": "5c6fae2ec82d846141663693a3145eca3f5540c1e3cf309b8867ecd375a315b5",
+  "resources": [
+    "dynamic_graph/planning/examples/__init__.py",
+    "dynamic_graph/planning/examples/blocked.json",
+    "dynamic_graph/planning/examples/distinct_update.json",
+    "dynamic_graph/planning/examples/generic_llm.json",
+    "dynamic_graph/planning/examples/parallel.json",
+    "dynamic_graph/planning/examples/sequential.json",
+    "dynamic_graph/planning/prompts/planner_repair_v1.txt",
+    "dynamic_graph/planning/prompts/planner_system_v1.txt"
+  ],
+  "resource_versions": {
+    "prompt_version": "1.0",
+    "prompt_hash": "dfa2b181cf06c1aabb4069ec7eec9f4399903678f44b01c7d7d89f991d9b401d",
+    "repair_hash": "23d4f71007165362933c3fcfabbe6331265edd88f9405f41d640806b56b571d0",
+    "schema_hash": "8f01445076085231fd9e42ac3857c845714b6db04f22cbf2da80b40d500b738f",
+    "dsl_version": "1.0",
+    "examples_hash": "e9bf1cdc4a2d85d3569a3bda673153a6d9fa613ba0dedc18964a438e34705d1b"
+  },
+  "demo": {
+    "execution_status": "COMPLETED",
+    "outputs": {
+      "totals": {
+        "east": 30,
+        "west": 50
+      }
+    },
+    "caller_accepted": true,
+    "graph_ref": "/private/var/folders/9l/l6j86wws29s2sn0rx9y2s9p00000gn/T/dynamic-graph-final-wheel-1tbassmo/runs/afd70d983453475bad8224f51837be79/graph.json"
+  },
+  "offline_check": {
+    "valid": true,
+    "diagnostics": []
+  },
+  "offline_compile": {
+    "valid": true,
+    "diagnostics": [],
+    "summary": {
+      "nodes": [
+        {
+          "id": "source_0",
+          "depends_on": [],
+          "kind": "tool",
+          "capability": "fixture.sales_totals_0@1.0.0",
+          "input_bindings": {
+            "topic": {
+              "source": "input",
+              "pointer": "/topic"
+            }
+          },
+          "writes": [
+            {
+              "field": "transactions",
+              "output_pointer": "/value"
+            }
+          ],
+          "instruction": null
+        },
+        {
+          "id": "source_1",
+          "depends_on": [],
+          "kind": "tool",
+          "capability": "fixture.sales_totals_1@1.0.0",
+          "input_bindings": {
+            "topic": {
+              "source": "input",
+              "pointer": "/topic"
+            }
+          },
+          "writes": [
+            {
+              "field": "transactions",
+              "output_pointer": "/value"
+            }
+          ],
+          "instruction": null
+        },
+        {
+          "id": "process",
+          "depends_on": [
+            "source_0",
+            "source_1"
+          ],
+          "kind": "tool",
+          "capability": "fixture.sales_totals_process@1.0.0",
+          "input_bindings": {
+            "data": {
+              "source": "state",
+              "field": "transactions",
+              "pointer": ""
+            }
+          },
+          "writes": [
+            {
+              "field": "totals",
+              "output_pointer": "/value"
+            }
+          ],
+          "instruction": null
+        }
+      ],
+      "state": {
+        "totals": {
+          "value_schema": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "update_schema": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "initial": {
+            "literal": {}
+          },
+          "reducer": {
+            "name": "builtin.replace",
+            "version": "1.0.0",
+            "config": {}
+          }
+        },
+        "transactions": {
+          "value_schema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "integer"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "region",
+                "amount"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "update_schema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "amount": {
+                  "type": "integer"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "region": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "region",
+                "amount"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "initial": {
+            "literal": []
+          },
+          "reducer": {
+            "name": "builtin.merge_by_key",
+            "version": "1.0.0",
+            "config": {
+              "key": "id",
+              "on_conflict": "error"
+            }
+          }
+        }
+      },
+      "finalize_predecessors": [
+        "process"
+      ],
+      "snapshot_hash": "1fb97f003125782616d964e7c39d4e789c8ed6c1e63c31152272d2449e8a9032"
+    }
+  },
+  "archive_private_file_check": "passed",
+  "credential_scan": "passed"
+}

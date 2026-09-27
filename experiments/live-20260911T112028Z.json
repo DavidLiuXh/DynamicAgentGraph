@@ -1,0 +1,245 @@
+{
+  "started_at": "2026-09-11T11:20:28.284680+00:00",
+  "model": {
+    "model": "deepseek-flash",
+    "mode": "function_calling",
+    "adapter_version": "1.0",
+    "max_output_tokens": 16384
+  },
+  "versions": {
+    "prompt_version": "1.0",
+    "prompt_hash": "dfa2b181cf06c1aabb4069ec7eec9f4399903678f44b01c7d7d89f991d9b401d",
+    "repair_hash": "23d4f71007165362933c3fcfabbe6331265edd88f9405f41d640806b56b571d0",
+    "schema_hash": "9f29633f73d5399c37431370cbfb08fe9d5c3cf92b7410409eaddd9d3e9c36ee",
+    "dsl_version": "1.0",
+    "examples_hash": "de6dc3eae12f0caebd01f9006926c3e963c7c53afc24d2aa82aa1c73fbf17357"
+  },
+  "runs": [
+    {
+      "case": "literature",
+      "category": "research",
+      "repeat": 1,
+      "run_id": "094d74acaa47424fbb5e0da0a9625190",
+      "first_valid": false,
+      "graph_valid": false,
+      "status": "FAILED",
+      "caller_accepted": false,
+      "usage": {
+        "model_calls": 3,
+        "tool_calls": 0,
+        "duration_seconds": 16.810518751008203,
+        "cost": null,
+        "input_tokens": 16369,
+        "known_input_tokens": 16369,
+        "output_tokens": 4920,
+        "known_output_tokens": 4920,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "GRAPH_GENERATION_FAILED",
+          "phase": "planning",
+          "message": "Planner exhausted allowed rounds",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "validation_errors": [
+              {
+                "code": "INVALID_GRAPH_SPEC",
+                "path": "/graph/nodes/3",
+                "message": "value_error"
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112028Z/094d74acaa47424fbb5e0da0a9625190"
+    },
+    {
+      "case": "literature",
+      "category": "research",
+      "repeat": 2,
+      "run_id": "116c4b10761c46d287594b785a8b6edf",
+      "first_valid": false,
+      "graph_valid": false,
+      "status": "FAILED",
+      "caller_accepted": false,
+      "usage": {
+        "model_calls": 3,
+        "tool_calls": 0,
+        "duration_seconds": 22.40393031600979,
+        "cost": null,
+        "input_tokens": 17995,
+        "known_input_tokens": 17995,
+        "output_tokens": 7359,
+        "known_output_tokens": 7359,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "GRAPH_GENERATION_FAILED",
+          "phase": "planning",
+          "message": "Planner exhausted allowed rounds",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "validation_errors": [
+              {
+                "code": "INVALID_GRAPH_SPEC",
+                "path": "/graph/nodes/4",
+                "message": "value_error"
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112028Z/116c4b10761c46d287594b785a8b6edf"
+    },
+    {
+      "case": "literature",
+      "category": "research",
+      "repeat": 3,
+      "run_id": "547698bcb7ca4d21ad62cd011ce07406",
+      "first_valid": false,
+      "graph_valid": false,
+      "status": "FAILED",
+      "caller_accepted": false,
+      "usage": {
+        "model_calls": 3,
+        "tool_calls": 0,
+        "duration_seconds": 21.419061091990443,
+        "cost": null,
+        "input_tokens": 17793,
+        "known_input_tokens": 17793,
+        "output_tokens": 7056,
+        "known_output_tokens": 7056,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "GRAPH_GENERATION_FAILED",
+          "phase": "planning",
+          "message": "Planner exhausted allowed rounds",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "validation_errors": [
+              {
+                "code": "INVALID_GRAPH_SPEC",
+                "path": "/graph/nodes/4",
+                "message": "value_error"
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112028Z/547698bcb7ca4d21ad62cd011ce07406"
+    },
+    {
+      "case": "deduplication",
+      "category": "research",
+      "repeat": 1,
+      "run_id": "07125e4a764f4062806685809dc86f75",
+      "first_valid": false,
+      "graph_valid": false,
+      "status": "FAILED",
+      "caller_accepted": false,
+      "usage": {
+        "model_calls": 3,
+        "tool_calls": 0,
+        "duration_seconds": 24.376670939993346,
+        "cost": null,
+        "input_tokens": 18053,
+        "known_input_tokens": 18053,
+        "output_tokens": 7437,
+        "known_output_tokens": 7437,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "GRAPH_GENERATION_FAILED",
+          "phase": "planning",
+          "message": "Planner exhausted allowed rounds",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "validation_errors": [
+              {
+                "code": "INVALID_GRAPH_SPEC",
+                "path": "/graph/nodes/4",
+                "message": "value_error"
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112028Z/07125e4a764f4062806685809dc86f75"
+    },
+    {
+      "case": "deduplication",
+      "category": "research",
+      "repeat": 2,
+      "run_id": "dedb334862a44cf8a9926b8b4cfdb8c9",
+      "first_valid": false,
+      "graph_valid": false,
+      "status": "FAILED",
+      "caller_accepted": false,
+      "usage": {
+        "model_calls": 3,
+        "tool_calls": 0,
+        "duration_seconds": 18.7090679880057,
+        "cost": null,
+        "input_tokens": 17038,
+        "known_input_tokens": 17038,
+        "output_tokens": 5950,
+        "known_output_tokens": 5950,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "GRAPH_GENERATION_FAILED",
+          "phase": "planning",
+          "message": "Planner exhausted allowed rounds",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "validation_errors": [
+              {
+                "code": "INVALID_GRAPH_SPEC",
+                "path": "/graph/nodes/3",
+                "message": "value_error"
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112028Z/dedb334862a44cf8a9926b8b4cfdb8c9"
+    }
+  ],
+  "quota_exhausted": false
+}

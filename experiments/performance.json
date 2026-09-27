@@ -1,0 +1,14 @@
+{
+  "platform": "macOS-26.6.2-x86_64-i386-64bit",
+  "python": "3.12.4",
+  "nodes": 32,
+  "state_fields": 64,
+  "iterations": 10,
+  "tracemalloc_enabled": true,
+  "validation_compile_p50_seconds": 6.023649698021472,
+  "validation_compile_p95_seconds": 8.793748319003498,
+  "peak_traced_bytes": 28560125,
+  "offline_execution": "passed",
+  "model_calls": 0,
+  "tool_calls": 32
+}

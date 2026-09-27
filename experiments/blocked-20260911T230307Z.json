@@ -1,0 +1,1076 @@
+{
+  "started_at": "2026-09-11T23:03:07.391954+00:00",
+  "model": {
+    "model": "deepseek-flash",
+    "mode": "function_calling",
+    "adapter_version": "1.0",
+    "max_output_tokens": 16384
+  },
+  "versions": {
+    "prompt_version": "1.0",
+    "prompt_hash": "dfa2b181cf06c1aabb4069ec7eec9f4399903678f44b01c7d7d89f991d9b401d",
+    "repair_hash": "23d4f71007165362933c3fcfabbe6331265edd88f9405f41d640806b56b571d0",
+    "schema_hash": "8f01445076085231fd9e42ac3857c845714b6db04f22cbf2da80b40d500b738f",
+    "dsl_version": "1.0",
+    "examples_hash": "e9bf1cdc4a2d85d3569a3bda673153a6d9fa613ba0dedc18964a438e34705d1b"
+  },
+  "runs": [
+    {
+      "case": "live_weather",
+      "expected_reason": "CAPABILITY_GAP",
+      "repeat": 1,
+      "run_id": "1d96a237aed54081afa81997bfde2ac7",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 4.079722620983375,
+        "cost": null,
+        "input_tokens": 4255,
+        "known_input_tokens": 4255,
+        "output_tokens": 249,
+        "known_output_tokens": 249,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The objective requires a live lookup of the remote weather station's current measurement (temperature plus measurement ID), but no measurement data is supplied as input and allowed_capabilities is empty, so no authorized tool or evaluator exists to perform the station lookup. An LLM node cannot fabricate the measurement, so no executable graph can be formed.",
+                "related_input_paths": [
+                  "/goal/inputs",
+                  "/goal/input_schema",
+                  "/allowed_capabilities"
+                ],
+                "missing_information": [
+                  "Current temperature value from the remote weather station",
+                  "Measurement ID associated with that reading"
+                ],
+                "required_capability_description": [
+                  "A read-only tool capability that queries the remote weather station and returns its current measurement (temperature and measurement ID)"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/1d96a237aed54081afa81997bfde2ac7"
+    },
+    {
+      "case": "live_weather",
+      "expected_reason": "CAPABILITY_GAP",
+      "repeat": 2,
+      "run_id": "e778c4c71ec4486980c60dc40603050e",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 2.2526980830007233,
+        "cost": null,
+        "input_tokens": 4255,
+        "known_input_tokens": 4255,
+        "output_tokens": 251,
+        "known_output_tokens": 251,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The objective requires a live lookup of the remote weather station's current temperature and measurement ID, but no measurement data is supplied as input and allowed_capabilities is empty (allowed_tools is also empty). No authorized tool or evaluator exists to perform the live station lookup, and an llm node cannot substitute for it without fabricating the measurement.",
+                "related_input_paths": [
+                  "/goal/inputs",
+                  "/goal/context",
+                  "/allowed_capabilities"
+                ],
+                "missing_information": [
+                  "Current temperature measurement from the synthetic city's remote weather station",
+                  "The station's measurement ID"
+                ],
+                "required_capability_description": [
+                  "A read-only live weather station lookup capability that returns the current temperature and the associated measurement ID for the specified station"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/e778c4c71ec4486980c60dc40603050e"
+    },
+    {
+      "case": "live_weather",
+      "expected_reason": "CAPABILITY_GAP",
+      "repeat": 3,
+      "run_id": "071a66eb7c9e4b4389780ef4e2603fb4",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 2.1652781429875176,
+        "cost": null,
+        "input_tokens": 4255,
+        "known_input_tokens": 4255,
+        "output_tokens": 252,
+        "known_output_tokens": 252,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The objective requires a live lookup of the remote weather station's current measurement (temperature plus measurement ID), but no measurement data is supplied as input and allowed_capabilities is empty, so no authorized tool or evaluator exists to perform the station lookup. An llm node cannot substitute for the missing live data source without fabricating results.",
+                "related_input_paths": [
+                  "/goal/inputs",
+                  "/goal/input_schema",
+                  "/allowed_capabilities"
+                ],
+                "missing_information": [
+                  "Current temperature measurement from the synthetic city's remote weather station",
+                  "Measurement ID associated with that station reading"
+                ],
+                "required_capability_description": [
+                  "A read-only live weather-station lookup capability that returns the current temperature and its measurement ID for the specified station"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/071a66eb7c9e4b4389780ef4e2603fb4"
+    },
+    {
+      "case": "private_article",
+      "expected_reason": "CAPABILITY_GAP",
+      "repeat": 1,
+      "run_id": "ac4316d7cba843388ec4b8856817d2c9",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 2.0865538209909573,
+        "cost": null,
+        "input_tokens": 4278,
+        "known_input_tokens": 4278,
+        "output_tokens": 252,
+        "known_output_tokens": 252,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The objective requires retrieving the verbatim conclusions of paper-247 from a private archive, but no authorized capability (allowed_capabilities is empty, allowed_tools is empty) can read that archive, and the paper text is not supplied as input. Without a read-only source for the archived paper, no node can obtain the required data, and fabricating it is prohibited.",
+                "related_input_paths": [
+                  "/goal/inputs/paper_id",
+                  "/allowed_capabilities"
+                ],
+                "missing_information": [
+                  "The verbatim text of paper-247 (conclusions section) from the private archive"
+                ],
+                "required_capability_description": [
+                  "A read-only archive retrieval capability that, given paper_id, returns the paper's verbatim text or conclusions"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/ac4316d7cba843388ec4b8856817d2c9"
+    },
+    {
+      "case": "private_article",
+      "expected_reason": "CAPABILITY_GAP",
+      "repeat": 2,
+      "run_id": "681dda334aa745a59cc9e3eebdcd56ad",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 1.7043233570002485,
+        "cost": null,
+        "input_tokens": 4278,
+        "known_input_tokens": 4278,
+        "output_tokens": 239,
+        "known_output_tokens": 239,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The goal requires retrieving the verbatim conclusions of paper-247 from a private archive, but no authorized capability (allowed_capabilities is empty) can read that archive, and the paper text is not supplied as input. Without a read-only archive retrieval capability the required source data cannot be obtained, so no executable graph can be built.",
+                "related_input_paths": [
+                  "/goal/inputs/paper_id",
+                  "/allowed_capabilities"
+                ],
+                "missing_information": [
+                  "The verbatim text/conclusions of paper-247 (not supplied as input)"
+                ],
+                "required_capability_description": [
+                  "A read-only capability to fetch a paper's content by paper_id from the private archive"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/681dda334aa745a59cc9e3eebdcd56ad"
+    },
+    {
+      "case": "private_article",
+      "expected_reason": "CAPABILITY_GAP",
+      "repeat": 3,
+      "run_id": "ba1488c3a4f342aabe7f717e3f00b181",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 2.050783547019819,
+        "cost": null,
+        "input_tokens": 4278,
+        "known_input_tokens": 4278,
+        "output_tokens": 257,
+        "known_output_tokens": 257,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The objective requires retrieving the verbatim conclusions of paper-247 from a private archive, but no authorized capability (allowed_capabilities is empty, allowed_tools is empty) can read that archive, and the paper text is not supplied as input. Without a read-only source for the paper, the conclusions cannot be obtained and must not be invented.",
+                "related_input_paths": [
+                  "/goal/inputs/paper_id",
+                  "/allowed_capabilities"
+                ],
+                "missing_information": [
+                  "The verbatim text of paper-247 (conclusions section) from the private archive"
+                ],
+                "required_capability_description": [
+                  "A read-only archive/document retrieval capability that can fetch the full text of a paper by its ID (e.g. paper-247) from the private archive"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/ba1488c3a4f342aabe7f717e3f00b181"
+    },
+    {
+      "case": "document_checksum",
+      "expected_reason": "MISSING_INFORMATION",
+      "repeat": 1,
+      "run_id": "5609b6c31bf846599152f99e95553195",
+      "blocked": true,
+      "reasons": [
+        "MISSING_INFORMATION"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 2.0379436160146724,
+        "cost": null,
+        "input_tokens": 4418,
+        "known_input_tokens": 4418,
+        "output_tokens": 251,
+        "known_output_tokens": 251,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "MISSING_INFORMATION",
+                "message": "The goal requires computing the SHA-256 checksum of the user's document, but the document content has not been supplied. The goal explicitly states the empty document is not the intended document, so no placeholder or empty-string input can be used. The only authorized capability (blocked.document_checksum@1.0.0) requires the actual user-supplied document as a required input, which is unavailable.",
+                "related_input_paths": [
+                  "/goal/inputs",
+                  "/goal/inputs/document"
+                ],
+                "missing_information": [
+                  "The actual user-supplied document content to be checksummed"
+                ],
+                "required_capability_description": [
+                  "A source providing the user's document content, or the document content supplied as a task input"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/5609b6c31bf846599152f99e95553195"
+    },
+    {
+      "case": "document_checksum",
+      "expected_reason": "MISSING_INFORMATION",
+      "repeat": 2,
+      "run_id": "c7a106d5b8cb4745a154852f6f7e7157",
+      "blocked": true,
+      "reasons": [
+        "MISSING_INFORMATION"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 1.7603629829827696,
+        "cost": null,
+        "input_tokens": 4418,
+        "known_input_tokens": 4418,
+        "output_tokens": 202,
+        "known_output_tokens": 202,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "MISSING_INFORMATION",
+                "message": "The goal requires computing the SHA-256 checksum of the user's document, but the document content has not been supplied. The goal explicitly states the empty document is not the intended document, so no valid input binding can be constructed for the required tool.",
+                "related_input_paths": [
+                  "/goal/inputs",
+                  "/goal/inputs/document"
+                ],
+                "missing_information": [
+                  "The actual user-supplied document content (string) to be checksummed"
+                ],
+                "required_capability_description": []
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/c7a106d5b8cb4745a154852f6f7e7157"
+    },
+    {
+      "case": "document_checksum",
+      "expected_reason": "MISSING_INFORMATION",
+      "repeat": 3,
+      "run_id": "b57ebc8d9716476d85ad4baf194f4826",
+      "blocked": true,
+      "reasons": [
+        "MISSING_INFORMATION"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 1.8069006630103104,
+        "cost": null,
+        "input_tokens": 4418,
+        "known_input_tokens": 4418,
+        "output_tokens": 202,
+        "known_output_tokens": 202,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "MISSING_INFORMATION",
+                "message": "The goal requires computing the SHA-256 checksum of the user's document, but the document content has not been supplied. The goal explicitly states the empty document is not the intended document, so no valid input binding can be constructed for the required tool.",
+                "related_input_paths": [
+                  "/goal/inputs",
+                  "/goal/inputs/document"
+                ],
+                "missing_information": [
+                  "The actual user-supplied document content (string) to be checksummed"
+                ],
+                "required_capability_description": []
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/b57ebc8d9716476d85ad4baf194f4826"
+    },
+    {
+      "case": "invoice_lookup",
+      "expected_reason": "MISSING_INFORMATION",
+      "repeat": 1,
+      "run_id": "35b81653db0640b1827f5d56c2ef6c06",
+      "blocked": true,
+      "reasons": [
+        "MISSING_INFORMATION"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 1.9392067320004571,
+        "cost": null,
+        "input_tokens": 4416,
+        "known_input_tokens": 4416,
+        "output_tokens": 228,
+        "known_output_tokens": 228,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "MISSING_INFORMATION",
+                "message": "The goal requires calling blocked.invoice_lookup@1.0.0, which mandates the user's actual invoice_id. No invoice_id is present in the confirmed inputs (input_schema is empty and inputs is {}), and the goal explicitly forbids guessing it. Without this value no executable node can be constructed.",
+                "related_input_paths": [
+                  "/goal/inputs",
+                  "/goal/input_schema"
+                ],
+                "missing_information": [
+                  "The user's actual invoice_id (string) required as the invoice_id argument to blocked.invoice_lookup@1.0.0"
+                ],
+                "required_capability_description": []
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/35b81653db0640b1827f5d56c2ef6c06"
+    },
+    {
+      "case": "invoice_lookup",
+      "expected_reason": "MISSING_INFORMATION",
+      "repeat": 2,
+      "run_id": "335ae549fdfe4ab5bc1a52e0eff67992",
+      "blocked": true,
+      "reasons": [
+        "MISSING_INFORMATION"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 2.487390583002707,
+        "cost": null,
+        "input_tokens": 4416,
+        "known_input_tokens": 4416,
+        "output_tokens": 280,
+        "known_output_tokens": 280,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "MISSING_INFORMATION",
+                "message": "The goal requires calling blocked.invoice_lookup@1.0.0, whose input_schema requires a non-empty invoice_id that must be the user's actual invoice ID and cannot be guessed. The confirmed goal declares no inputs (input_schema has no properties and no required fields), so no invoice_id value is available from any authorized source. Without it, no executable node can be constructed and the required output 'answer' cannot be produced.",
+                "related_input_paths": [
+                  "/goal/inputs",
+                  "/goal/input_schema",
+                  "/goal/objective"
+                ],
+                "missing_information": [
+                  "The user's actual invoice_id (string) required by blocked.invoice_lookup@1.0.0"
+                ],
+                "required_capability_description": [
+                  "A user-supplied invoice_id value, or an authorized read-only capability that can resolve the user's actual invoice_id without guessing"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/335ae549fdfe4ab5bc1a52e0eff67992"
+    },
+    {
+      "case": "invoice_lookup",
+      "expected_reason": "MISSING_INFORMATION",
+      "repeat": 3,
+      "run_id": "8b3052cd95594dd089d111f156a22148",
+      "blocked": true,
+      "reasons": [
+        "MISSING_INFORMATION"
+      ],
+      "reason_matches": true,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 2.009077293012524,
+        "cost": null,
+        "input_tokens": 4416,
+        "known_input_tokens": 4416,
+        "output_tokens": 243,
+        "known_output_tokens": 243,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "MISSING_INFORMATION",
+                "message": "The goal requires returning the user's invoice status via blocked.invoice_lookup@1.0.0, but the required invoice_id is not supplied in the confirmed inputs (goal.inputs is empty and input_schema has no properties). The invoice_id must be the user's actual invoice ID and cannot be guessed or fabricated, so no executable node can be bound to a real data source.",
+                "related_input_paths": [
+                  "/goal/inputs",
+                  "/goal/input_schema"
+                ],
+                "missing_information": [
+                  "The user's actual invoice_id (string) required as the invoice_id input to blocked.invoice_lookup@1.0.0"
+                ],
+                "required_capability_description": []
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/8b3052cd95594dd089d111f156a22148"
+    },
+    {
+      "case": "restricted_invoice",
+      "expected_reason": "CONSTRAINT_CONFLICT",
+      "repeat": 1,
+      "run_id": "e556e561d4a54acaaa15e617665dbc4c",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": false,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 1.7756994389928877,
+        "cost": null,
+        "input_tokens": 4281,
+        "known_input_tokens": 4281,
+        "output_tokens": 247,
+        "known_output_tokens": 247,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The objective requires the authoritative invoice status from blocked.restricted_invoice, but allowed_capabilities is empty and the policy does not authorize that tool. No substitute source or invented status is acceptable, so no executable node can produce the required answer.",
+                "related_input_paths": [
+                  "/goal/objective",
+                  "/allowed_capabilities",
+                  "/execution_constraints/allowed_tools"
+                ],
+                "missing_information": [
+                  "Authorization to call blocked.restricted_invoice, or an authorized read-only source that returns INV-123's authoritative status"
+                ],
+                "required_capability_description": [
+                  "blocked.restricted_invoice (or an equivalent authorized read-only invoice-status source) registered in allowed_capabilities with an exact name and version"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/e556e561d4a54acaaa15e617665dbc4c"
+    },
+    {
+      "case": "restricted_invoice",
+      "expected_reason": "CONSTRAINT_CONFLICT",
+      "repeat": 2,
+      "run_id": "1ccb544b967b4d74a87bddf63eedb5cb",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": false,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 2.707219330011867,
+        "cost": null,
+        "input_tokens": 4281,
+        "known_input_tokens": 4281,
+        "output_tokens": 264,
+        "known_output_tokens": 264,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The goal requires the exact authoritative status of INV-123 from the source 'blocked.restricted_invoice', but that capability is not present in allowed_capabilities (which is empty) and no substitute or invented status is acceptable. No authorized tool, evaluator, or LLM-only step can produce the required authoritative value, so no executable graph can be formed.",
+                "related_input_paths": [
+                  "/goal/objective",
+                  "/goal/inputs/invoice_id",
+                  "/allowed_capabilities"
+                ],
+                "missing_information": [
+                  "Authorized access to the authoritative invoice status source for INV-123"
+                ],
+                "required_capability_description": [
+                  "A read-only capability that returns the exact authoritative status of a given invoice id (e.g. blocked.restricted_invoice) must be authorized in allowed_capabilities"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/1ccb544b967b4d74a87bddf63eedb5cb"
+    },
+    {
+      "case": "restricted_invoice",
+      "expected_reason": "CONSTRAINT_CONFLICT",
+      "repeat": 3,
+      "run_id": "e013c8da2ba749379f2edd6e5b32a82a",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": false,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 1.5997318250010721,
+        "cost": null,
+        "input_tokens": 4281,
+        "known_input_tokens": 4281,
+        "output_tokens": 237,
+        "known_output_tokens": 237,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The goal requires the exact authoritative invoice status from blocked.restricted_invoice, but allowed_capabilities is empty and the policy does not authorize that tool. No substitute source or invented status is acceptable, so no executable node can produce the required answer.",
+                "related_input_paths": [
+                  "/goal/objective",
+                  "/goal/inputs/invoice_id",
+                  "/allowed_capabilities"
+                ],
+                "missing_information": [
+                  "Authorized read-only capability that returns the authoritative status for invoice INV-123"
+                ],
+                "required_capability_description": [
+                  "A read-only capability (e.g. blocked.restricted_invoice) authorized by policy that returns the exact authoritative status of a given invoice id"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/e013c8da2ba749379f2edd6e5b32a82a"
+    },
+    {
+      "case": "restricted_document",
+      "expected_reason": "CONSTRAINT_CONFLICT",
+      "repeat": 1,
+      "run_id": "cea9004c079b427a87c7f5da3a60686e",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": false,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 2.2320326839981135,
+        "cost": null,
+        "input_tokens": 4279,
+        "known_input_tokens": 4279,
+        "output_tokens": 269,
+        "known_output_tokens": 269,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The objective requires the exact checksum of the supplied document computed from the mandatory certified source 'blocked.restricted_document', but that source is forbidden by current policy and no authorized capability is available to read it. Local or model-generated substitutes are explicitly declared insufficient, so no executable node can produce the required answer.",
+                "related_input_paths": [
+                  "/goal/objective",
+                  "/allowed_capabilities",
+                  "/execution_constraints/allowed_tools"
+                ],
+                "missing_information": [
+                  "Authorized access to the certified source 'blocked.restricted_document' for the supplied document"
+                ],
+                "required_capability_description": [
+                  "A read-only capability that returns the certified checksum of the supplied document from 'blocked.restricted_document'",
+                  "Or an explicit policy authorization permitting use of 'blocked.restricted_document'"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/cea9004c079b427a87c7f5da3a60686e"
+    },
+    {
+      "case": "restricted_document",
+      "expected_reason": "CONSTRAINT_CONFLICT",
+      "repeat": 2,
+      "run_id": "93cefde7909c4fe1a0212dac7231c93c",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": false,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 1.914893557986943,
+        "cost": null,
+        "input_tokens": 4279,
+        "known_input_tokens": 4279,
+        "output_tokens": 255,
+        "known_output_tokens": 255,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The objective requires the exact checksum of the supplied document computed from the mandatory certified source 'blocked.restricted_document', but current policy forbids calling it and no authorized capability is available. Local or model-generated substitutes are explicitly declared non-satisfying, so no executable node can produce a valid answer.",
+                "related_input_paths": [
+                  "/goal/objective",
+                  "/allowed_capabilities",
+                  "/execution_constraints/allowed_tools"
+                ],
+                "missing_information": [
+                  "Authorized access to the certified source 'blocked.restricted_document' for computing the document checksum"
+                ],
+                "required_capability_description": [
+                  "A read-only capability that returns the exact checksum of the supplied document from the certified source 'blocked.restricted_document'"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/93cefde7909c4fe1a0212dac7231c93c"
+    },
+    {
+      "case": "restricted_document",
+      "expected_reason": "CONSTRAINT_CONFLICT",
+      "repeat": 3,
+      "run_id": "9a22148bd16d4b6f9f571af3a5164e6f",
+      "blocked": true,
+      "reasons": [
+        "CAPABILITY_GAP"
+      ],
+      "reason_matches": false,
+      "graph_returned": false,
+      "tool_invocations": 0,
+      "status": "FAILED",
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 0,
+        "duration_seconds": 1.961860794981476,
+        "cost": null,
+        "input_tokens": 4279,
+        "known_input_tokens": 4279,
+        "output_tokens": 236,
+        "known_output_tokens": 236,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "PLANNING_BLOCKED",
+          "phase": "planning",
+          "message": "Planner reported missing information or capability",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "diagnostics": [
+              {
+                "reason_code": "CAPABILITY_GAP",
+                "message": "The task requires the exact checksum from the mandatory certified source blocked.restricted_document, but current policy forbids calling it and no authorized capability is available. Local or model-generated substitutes are explicitly disallowed, so no executable graph can produce the required answer.",
+                "related_input_paths": [
+                  "/goal/objective",
+                  "/allowed_capabilities"
+                ],
+                "missing_information": [
+                  "Authorized access to blocked.restricted_document (or an equivalent certified checksum source) to obtain the exact document checksum"
+                ],
+                "required_capability_description": [
+                  "A read-only capability that returns the exact checksum of the supplied document from the certified source blocked.restricted_document"
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/blocked-20260911T230307Z/9a22148bd16d4b6f9f571af3a5164e6f"
+    }
+  ],
+  "quota_exhausted": false,
+  "summary": {
+    "runs": 18,
+    "blocked": 18,
+    "reason_matches": 12,
+    "graphs_returned": 0,
+    "tool_invocations": 0
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "case_name": "blocked",
+  "capability_keys": [],
+  "response": {
+    "response_version": "1.0",
+    "outcome": "blocked",
+    "graph": null,
+    "diagnostics": [
+      {
+        "reason_code": "CAPABILITY_GAP",
+        "message": "No authorized source can provide the requested data.",
+        "related_input_paths": [],
+        "missing_information": [],
+        "required_capability_description": [
+          "A read-only source for the requested data"
+        ]
+      }
+    ]
+  }
+}

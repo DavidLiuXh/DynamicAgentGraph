@@ -1,0 +1,273 @@
+{
+  "dsl_version": "1.0",
+  "state_fields": {
+    "findings": {
+      "description": "两个来源的合并发现",
+      "value_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "update_schema": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "initial": {
+        "literal": []
+      },
+      "reducer": {
+        "name": "builtin.merge_by_key",
+        "version": "1.0.0",
+        "config": {
+          "key": "id",
+          "on_conflict": "error"
+        }
+      }
+    },
+    "report": {
+      "description": "交付报告文本",
+      "value_schema": {
+        "type": "string"
+      },
+      "update_schema": {
+        "type": "string"
+      },
+      "initial": {
+        "literal": ""
+      },
+      "reducer": {
+        "name": "builtin.replace",
+        "version": "1.0.0",
+        "config": {}
+      }
+    }
+  },
+  "nodes": [
+    {
+      "id": "search_a",
+      "kind": "tool",
+      "capability": {
+        "name": "demo.search_a",
+        "version": "1.0.0"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "input_bindings": {
+        "query": {
+          "source": "input",
+          "pointer": "/query_a"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "text"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "findings"
+        ],
+        "additionalProperties": false
+      },
+      "writes": [
+        {
+          "field": "findings",
+          "output_pointer": "/findings"
+        }
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "search_b",
+      "kind": "tool",
+      "capability": {
+        "name": "demo.search_b",
+        "version": "1.0.0"
+      },
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "additionalProperties": false
+      },
+      "input_bindings": {
+        "query": {
+          "source": "input",
+          "pointer": "/query_b"
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "text"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "findings"
+        ],
+        "additionalProperties": false
+      },
+      "writes": [
+        {
+          "field": "findings",
+          "output_pointer": "/findings"
+        }
+      ],
+      "depends_on": []
+    },
+    {
+      "id": "compose",
+      "kind": "llm",
+      "model_role": "worker",
+      "instruction": "根据传入发现撰写报告，明确资料不足之处，不宣称业务成功标准已经通过。",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "findings": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "text"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "findings"
+        ],
+        "additionalProperties": false
+      },
+      "input_bindings": {
+        "findings": {
+          "source": "state",
+          "field": "findings",
+          "pointer": ""
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "report": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "report"
+        ],
+        "additionalProperties": false
+      },
+      "writes": [
+        {
+          "field": "report",
+          "output_pointer": "/report"
+        }
+      ],
+      "depends_on": [
+        "search_a",
+        "search_b"
+      ]
+    }
+  ],
+  "outputs": {
+    "report": {
+      "source": "state",
+      "field": "report",
+      "pointer": ""
+    },
+    "findings": {
+      "source": "state",
+      "field": "findings",
+      "pointer": ""
+    }
+  }
+}

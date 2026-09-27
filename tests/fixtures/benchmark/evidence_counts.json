@@ -1,0 +1,238 @@
+{
+  "goal": {
+    "objective": "Combine both evidence-count entries into a dictionary indexed by key using the registered index reducer.",
+    "success_criteria": [
+      {
+        "id": "exact_sources",
+        "description": "Use every supplied authorized source, preserve its data exactly, and return all requested fields."
+      }
+    ],
+    "context": {},
+    "inputs": {
+      "topic": "evidence_counts"
+    },
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "topic"
+      ],
+      "additionalProperties": false
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "counts"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "graph": {
+    "dsl_version": "1.0",
+    "state_fields": {
+      "counts": {
+        "value_schema": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "update_schema": {
+          "type": "object",
+          "properties": {
+            "key": {
+              "type": "string"
+            },
+            "value": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "key",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        "initial": {
+          "literal": {}
+        },
+        "reducer": {
+          "name": "fixture.index",
+          "version": "1.0.0",
+          "config": {}
+        }
+      }
+    },
+    "nodes": [
+      {
+        "id": "source_0",
+        "kind": "tool",
+        "capability": {
+          "name": "fixture.evidence_counts_0",
+          "version": "1.0.0"
+        },
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "topic": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "topic"
+          ],
+          "additionalProperties": false
+        },
+        "input_bindings": {
+          "topic": {
+            "source": "input",
+            "pointer": "/topic"
+          }
+        },
+        "output_schema": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "key",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        "writes": [
+          {
+            "field": "counts",
+            "output_pointer": "/value"
+          }
+        ],
+        "depends_on": []
+      },
+      {
+        "id": "source_1",
+        "kind": "tool",
+        "capability": {
+          "name": "fixture.evidence_counts_1",
+          "version": "1.0.0"
+        },
+        "input_schema": {
+          "type": "object",
+          "properties": {
+            "topic": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "topic"
+          ],
+          "additionalProperties": false
+        },
+        "input_bindings": {
+          "topic": {
+            "source": "input",
+            "pointer": "/topic"
+          }
+        },
+        "output_schema": {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "key",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        "writes": [
+          {
+            "field": "counts",
+            "output_pointer": "/value"
+          }
+        ],
+        "depends_on": []
+      }
+    ],
+    "outputs": {
+      "counts": {
+        "source": "state",
+        "field": "counts",
+        "pointer": ""
+      }
+    }
+  },
+  "policy": {
+    "allowed_tools": [
+      "fixture.evidence_counts_0@1.0.0",
+      "fixture.evidence_counts_1@1.0.0"
+    ],
+    "allowed_evaluators": [],
+    "allowed_reducers": [
+      "builtin.replace@1.0.0",
+      "builtin.merge_by_key@1.0.0",
+      "builtin.merge_map_strict@1.0.0",
+      "fixture.index@1.0.0"
+    ],
+    "max_nodes": 32,
+    "max_state_fields": 64,
+    "max_graph_bytes": 262144,
+    "max_schema_depth": 8,
+    "max_state_bytes": 8388608,
+    "max_result_bytes": 2097152,
+    "max_parallelism": 4,
+    "max_planning_rounds": 3,
+    "max_node_attempts": 2,
+    "max_model_calls": 40,
+    "max_tool_calls": 64,
+    "run_timeout_seconds": 600.0,
+    "node_timeout_seconds": 60.0,
+    "max_cost": null,
+    "max_tokens": null
+  },
+  "expected": {
+    "counts": {
+      "paper_a": 2,
+      "paper_b": 3
+    }
+  }
+}

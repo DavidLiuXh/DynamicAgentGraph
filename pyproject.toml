@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dynamic-agent-graph"
+version = "0.1.0"
+description = "Validated goal-to-DAG planning and execution with dynamic state"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "pydantic>=2.11,<3",
+  "jsonschema>=4.23,<5",
+  "langgraph>=1.0,<2",
+  "langchain-openai>=1.0,<2",
+]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "pytest-asyncio>=1,<2", "build>=1.2,<2", "ruff>=0.12,<1"]
+
+[project.scripts]
+check-graph = "dynamic_graph.devtools.cli:check_main"
+compile-graph = "dynamic_graph.devtools.cli:compile_main"
+dynamic-graph-demo = "dynamic_graph.devtools.demo:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dynamic_graph"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "schemas", "experiments", "*.md", "pyproject.toml", "uv.lock", ".env.example"]
+exclude = ["**/__pycache__", "**/*.pyc"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = ["live: opt-in paid model tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = [".venv*", "runs", "dist", "build"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

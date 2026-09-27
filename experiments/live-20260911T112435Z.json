@@ -1,0 +1,973 @@
+{
+  "started_at": "2026-09-11T11:24:35.667152+00:00",
+  "model": {
+    "model": "deepseek-flash",
+    "mode": "function_calling",
+    "adapter_version": "1.0",
+    "max_output_tokens": 16384
+  },
+  "versions": {
+    "prompt_version": "1.0",
+    "prompt_hash": "dfa2b181cf06c1aabb4069ec7eec9f4399903678f44b01c7d7d89f991d9b401d",
+    "repair_hash": "23d4f71007165362933c3fcfabbe6331265edd88f9405f41d640806b56b571d0",
+    "schema_hash": "8f01445076085231fd9e42ac3857c845714b6db04f22cbf2da80b40d500b738f",
+    "dsl_version": "1.0",
+    "examples_hash": "e9bf1cdc4a2d85d3569a3bda673153a6d9fa613ba0dedc18964a438e34705d1b"
+  },
+  "runs": [
+    {
+      "case": "literature",
+      "category": "research",
+      "repeat": 1,
+      "run_id": "9cf7ed03bba14a808358668c69716e43",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 2,
+        "duration_seconds": 7.627786247001495,
+        "cost": null,
+        "input_tokens": 5227,
+        "known_input_tokens": 5227,
+        "output_tokens": 1290,
+        "known_output_tokens": 1290,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/9cf7ed03bba14a808358668c69716e43"
+    },
+    {
+      "case": "literature",
+      "category": "research",
+      "repeat": 2,
+      "run_id": "5e6242dffdb24e85af426b5e94103e93",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 2,
+        "duration_seconds": 5.331926434999332,
+        "cost": null,
+        "input_tokens": 5252,
+        "known_input_tokens": 5252,
+        "output_tokens": 1312,
+        "known_output_tokens": 1312,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/5e6242dffdb24e85af426b5e94103e93"
+    },
+    {
+      "case": "literature",
+      "category": "research",
+      "repeat": 3,
+      "run_id": "9a29697e608b4eaca839deee127dab45",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 2,
+        "duration_seconds": 5.6783096810104325,
+        "cost": null,
+        "input_tokens": 5239,
+        "known_input_tokens": 5239,
+        "output_tokens": 1302,
+        "known_output_tokens": 1302,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/9a29697e608b4eaca839deee127dab45"
+    },
+    {
+      "case": "deduplication",
+      "category": "research",
+      "repeat": 1,
+      "run_id": "52f2fcd6519c4d0f88e6846d7fb72552",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 2,
+        "duration_seconds": 5.709574095992139,
+        "cost": null,
+        "input_tokens": 5260,
+        "known_input_tokens": 5260,
+        "output_tokens": 1310,
+        "known_output_tokens": 1310,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/52f2fcd6519c4d0f88e6846d7fb72552"
+    },
+    {
+      "case": "deduplication",
+      "category": "research",
+      "repeat": 2,
+      "run_id": "2c4ccfb38d6842ca9708ca1c5d19beb0",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 2,
+        "duration_seconds": 5.7521159579919185,
+        "cost": null,
+        "input_tokens": 5284,
+        "known_input_tokens": 5284,
+        "output_tokens": 1541,
+        "known_output_tokens": 1541,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/2c4ccfb38d6842ca9708ca1c5d19beb0"
+    },
+    {
+      "case": "deduplication",
+      "category": "research",
+      "repeat": 3,
+      "run_id": "cc0ca4df08224a93946f8723ecc077de",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 2,
+        "duration_seconds": 5.731185009994078,
+        "cost": null,
+        "input_tokens": 5223,
+        "known_input_tokens": 5223,
+        "output_tokens": 1277,
+        "known_output_tokens": 1277,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/cc0ca4df08224a93946f8723ecc077de"
+    },
+    {
+      "case": "catalog",
+      "category": "research",
+      "repeat": 1,
+      "run_id": "cc917076762a40de9f0fe464c0d5582d",
+      "first_valid": false,
+      "graph_valid": false,
+      "status": "FAILED",
+      "caller_accepted": false,
+      "usage": {
+        "model_calls": 3,
+        "tool_calls": 0,
+        "duration_seconds": 9.104492045007646,
+        "cost": null,
+        "input_tokens": 15640,
+        "known_input_tokens": 15640,
+        "output_tokens": 2040,
+        "known_output_tokens": 2040,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "GRAPH_VALIDATION_FAILED",
+          "phase": "planning",
+          "message": "Planner exhausted allowed rounds",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "validation_errors": [
+              {
+                "code": "CAPABILITY_NOT_ALLOWED",
+                "phase": "validation",
+                "message": "Capability is not authorized",
+                "node_id": "check_catalog_complete",
+                "attempt": null,
+                "path": "/nodes/2/capability",
+                "severity": "error",
+                "action": "NONE",
+                "details": {}
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/cc917076762a40de9f0fe464c0d5582d"
+    },
+    {
+      "case": "catalog",
+      "category": "research",
+      "repeat": 2,
+      "run_id": "97a376f0889f4328881e4a0503e51442",
+      "first_valid": false,
+      "graph_valid": false,
+      "status": "FAILED",
+      "caller_accepted": false,
+      "usage": {
+        "model_calls": 3,
+        "tool_calls": 0,
+        "duration_seconds": 9.326693882001564,
+        "cost": null,
+        "input_tokens": 15676,
+        "known_input_tokens": 15676,
+        "output_tokens": 1923,
+        "known_output_tokens": 1923,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [
+        {
+          "code": "GRAPH_GENERATION_FAILED",
+          "phase": "planning",
+          "message": "Planner exhausted allowed rounds",
+          "node_id": null,
+          "attempt": null,
+          "path": "",
+          "severity": "error",
+          "action": "NONE",
+          "details": {
+            "validation_errors": [
+              {
+                "code": "MODEL_RESPONSE_INVALID",
+                "path": "",
+                "message": "Return a complete valid response"
+              }
+            ]
+          }
+        }
+      ],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/97a376f0889f4328881e4a0503e51442"
+    },
+    {
+      "case": "catalog",
+      "category": "research",
+      "repeat": 3,
+      "run_id": "20f9201e1d0f4ac38c431293d8a2c780",
+      "first_valid": false,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 2,
+        "duration_seconds": 6.612355402990943,
+        "cost": null,
+        "input_tokens": 10161,
+        "known_input_tokens": 10161,
+        "output_tokens": 1301,
+        "known_output_tokens": 1301,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/20f9201e1d0f4ac38c431293d8a2c780"
+    },
+    {
+      "case": "check_evidence",
+      "category": "research",
+      "repeat": 1,
+      "run_id": "2d68a1f9dbdc4cc597d98519407691ce",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 2.3223520060128067,
+        "cost": null,
+        "input_tokens": 4525,
+        "known_input_tokens": 4525,
+        "output_tokens": 467,
+        "known_output_tokens": 467,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/2d68a1f9dbdc4cc597d98519407691ce"
+    },
+    {
+      "case": "check_evidence",
+      "category": "research",
+      "repeat": 2,
+      "run_id": "bd9ee481f92949d0a4f1f5178f29c6d0",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 2.743568129983032,
+        "cost": null,
+        "input_tokens": 4525,
+        "known_input_tokens": 4525,
+        "output_tokens": 467,
+        "known_output_tokens": 467,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/bd9ee481f92949d0a4f1f5178f29c6d0"
+    },
+    {
+      "case": "check_evidence",
+      "category": "research",
+      "repeat": 3,
+      "run_id": "cbe80ceb246945d3b08f982c39dbdf7e",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 2.1447018290054984,
+        "cost": null,
+        "input_tokens": 4525,
+        "known_input_tokens": 4525,
+        "output_tokens": 467,
+        "known_output_tokens": 467,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/cbe80ceb246945d3b08f982c39dbdf7e"
+    },
+    {
+      "case": "nullable_source",
+      "category": "research",
+      "repeat": 1,
+      "run_id": "0709ffac986646b19591d18608791931",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 2.526507461996516,
+        "cost": null,
+        "input_tokens": 4533,
+        "known_input_tokens": 4533,
+        "output_tokens": 493,
+        "known_output_tokens": 493,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/0709ffac986646b19591d18608791931"
+    },
+    {
+      "case": "nullable_source",
+      "category": "research",
+      "repeat": 2,
+      "run_id": "81b495e79f1f4f6da28f839d1818cb6f",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 2.451925241999561,
+        "cost": null,
+        "input_tokens": 4533,
+        "known_input_tokens": 4533,
+        "output_tokens": 493,
+        "known_output_tokens": 493,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/81b495e79f1f4f6da28f839d1818cb6f"
+    },
+    {
+      "case": "nullable_source",
+      "category": "research",
+      "repeat": 3,
+      "run_id": "3d995e7deee742329169f9e7e89b2736",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 2.5493183080106974,
+        "cost": null,
+        "input_tokens": 4533,
+        "known_input_tokens": 4533,
+        "output_tokens": 493,
+        "known_output_tokens": 493,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/3d995e7deee742329169f9e7e89b2736"
+    },
+    {
+      "case": "evidence_counts",
+      "category": "research",
+      "repeat": 1,
+      "run_id": "83f5f44972c44966906435e44742bc9c",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "duration_seconds": 3.0329680510039907,
+        "cost": null,
+        "input_tokens": 4874,
+        "known_input_tokens": 4874,
+        "output_tokens": 658,
+        "known_output_tokens": 658,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/83f5f44972c44966906435e44742bc9c"
+    },
+    {
+      "case": "evidence_counts",
+      "category": "research",
+      "repeat": 2,
+      "run_id": "cabe044fcdc44c3ea6e8b869c223d810",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "duration_seconds": 2.9072164120152593,
+        "cost": null,
+        "input_tokens": 4874,
+        "known_input_tokens": 4874,
+        "output_tokens": 658,
+        "known_output_tokens": 658,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/cabe044fcdc44c3ea6e8b869c223d810"
+    },
+    {
+      "case": "evidence_counts",
+      "category": "research",
+      "repeat": 3,
+      "run_id": "85b36ab46df2411786ffd69e33b38013",
+      "first_valid": false,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 2,
+        "duration_seconds": 6.137787606974598,
+        "cost": null,
+        "input_tokens": 10729,
+        "known_input_tokens": 10729,
+        "output_tokens": 1500,
+        "known_output_tokens": 1500,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/85b36ab46df2411786ffd69e33b38013"
+    },
+    {
+      "case": "sales_totals",
+      "category": "data",
+      "repeat": 1,
+      "run_id": "43ce2b4b9c004909a358b1023ef96376",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 3,
+        "duration_seconds": 4.251343117997749,
+        "cost": null,
+        "input_tokens": 5000,
+        "known_input_tokens": 5000,
+        "output_tokens": 1134,
+        "known_output_tokens": 1134,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/43ce2b4b9c004909a358b1023ef96376"
+    },
+    {
+      "case": "sales_totals",
+      "category": "data",
+      "repeat": 2,
+      "run_id": "e3874a7bd4b44c82bdfb7239b776df00",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 3,
+        "duration_seconds": 4.20671964698704,
+        "cost": null,
+        "input_tokens": 5000,
+        "known_input_tokens": 5000,
+        "output_tokens": 1134,
+        "known_output_tokens": 1134,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/e3874a7bd4b44c82bdfb7239b776df00"
+    },
+    {
+      "case": "sales_totals",
+      "category": "data",
+      "repeat": 3,
+      "run_id": "2fd3b97b4b364113b033ed200ab4b35f",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 3,
+        "duration_seconds": 7.929253159003565,
+        "cost": null,
+        "input_tokens": 5519,
+        "known_input_tokens": 5519,
+        "output_tokens": 2044,
+        "known_output_tokens": 2044,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/2fd3b97b4b364113b033ed200ab4b35f"
+    },
+    {
+      "case": "normalized_names",
+      "category": "data",
+      "repeat": 1,
+      "run_id": "53d3f575f02e4f2abdf62aa491083140",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "duration_seconds": 3.238305926002795,
+        "cost": null,
+        "input_tokens": 4667,
+        "known_input_tokens": 4667,
+        "output_tokens": 689,
+        "known_output_tokens": 689,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/53d3f575f02e4f2abdf62aa491083140"
+    },
+    {
+      "case": "normalized_names",
+      "category": "data",
+      "repeat": 2,
+      "run_id": "3e4eb00e45bf4eb49e674fbc6a915dca",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "duration_seconds": 3.4072359619894996,
+        "cost": null,
+        "input_tokens": 4667,
+        "known_input_tokens": 4667,
+        "output_tokens": 689,
+        "known_output_tokens": 689,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/3e4eb00e45bf4eb49e674fbc6a915dca"
+    },
+    {
+      "case": "normalized_names",
+      "category": "data",
+      "repeat": 3,
+      "run_id": "106c43fabdfc47e68c87c8aeeaae1408",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "duration_seconds": 2.9298107890062965,
+        "cost": null,
+        "input_tokens": 4667,
+        "known_input_tokens": 4667,
+        "output_tokens": 693,
+        "known_output_tokens": 693,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/106c43fabdfc47e68c87c8aeeaae1408"
+    },
+    {
+      "case": "inventory",
+      "category": "data",
+      "repeat": 1,
+      "run_id": "8336fbc8f7af477db077bc699dd9aa2d",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 2,
+        "duration_seconds": 6.788326373003656,
+        "cost": null,
+        "input_tokens": 5235,
+        "known_input_tokens": 5235,
+        "output_tokens": 1539,
+        "known_output_tokens": 1539,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/8336fbc8f7af477db077bc699dd9aa2d"
+    },
+    {
+      "case": "inventory",
+      "category": "data",
+      "repeat": 2,
+      "run_id": "5775f0460129484fb36c0546d33dc60b",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 2,
+        "duration_seconds": 6.830260190996341,
+        "cost": null,
+        "input_tokens": 5238,
+        "known_input_tokens": 5238,
+        "output_tokens": 1531,
+        "known_output_tokens": 1531,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/5775f0460129484fb36c0546d33dc60b"
+    },
+    {
+      "case": "inventory",
+      "category": "data",
+      "repeat": 3,
+      "run_id": "f0151850f363473aa62aa8b1a8c7681b",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 2,
+        "tool_calls": 2,
+        "duration_seconds": 6.739664305001497,
+        "cost": null,
+        "input_tokens": 5235,
+        "known_input_tokens": 5235,
+        "output_tokens": 1539,
+        "known_output_tokens": 1539,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/f0151850f363473aa62aa8b1a8c7681b"
+    },
+    {
+      "case": "statistics",
+      "category": "data",
+      "repeat": 1,
+      "run_id": "311366f3d53240cbac2c39e3d844c0c3",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "duration_seconds": 3.355419929983327,
+        "cost": null,
+        "input_tokens": 4730,
+        "known_input_tokens": 4730,
+        "output_tokens": 814,
+        "known_output_tokens": 814,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/311366f3d53240cbac2c39e3d844c0c3"
+    },
+    {
+      "case": "statistics",
+      "category": "data",
+      "repeat": 2,
+      "run_id": "fcfd0bd7518e4f98a6589b06bce69749",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "duration_seconds": 3.767594195000129,
+        "cost": null,
+        "input_tokens": 4730,
+        "known_input_tokens": 4730,
+        "output_tokens": 813,
+        "known_output_tokens": 813,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/fcfd0bd7518e4f98a6589b06bce69749"
+    },
+    {
+      "case": "statistics",
+      "category": "data",
+      "repeat": 3,
+      "run_id": "9ca40173c6e240dc9e94aa01fc403875",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 2,
+        "duration_seconds": 3.5209673090139404,
+        "cost": null,
+        "input_tokens": 4730,
+        "known_input_tokens": 4730,
+        "output_tokens": 814,
+        "known_output_tokens": 814,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/9ca40173c6e240dc9e94aa01fc403875"
+    },
+    {
+      "case": "nested_records",
+      "category": "data",
+      "repeat": 1,
+      "run_id": "68b81ce031a94996b225815ecfbe2a07",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 3.0498527550080325,
+        "cost": null,
+        "input_tokens": 4618,
+        "known_input_tokens": 4618,
+        "output_tokens": 618,
+        "known_output_tokens": 618,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/68b81ce031a94996b225815ecfbe2a07"
+    },
+    {
+      "case": "nested_records",
+      "category": "data",
+      "repeat": 2,
+      "run_id": "221d6828136c47afa88975ff803ee5f5",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 3.150398839992704,
+        "cost": null,
+        "input_tokens": 4618,
+        "known_input_tokens": 4618,
+        "output_tokens": 632,
+        "known_output_tokens": 632,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/221d6828136c47afa88975ff803ee5f5"
+    },
+    {
+      "case": "nested_records",
+      "category": "data",
+      "repeat": 3,
+      "run_id": "e81b25bffb7849cb8a38f767301efc06",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 2.7883270269958302,
+        "cost": null,
+        "input_tokens": 4618,
+        "known_input_tokens": 4618,
+        "output_tokens": 632,
+        "known_output_tokens": 632,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/e81b25bffb7849cb8a38f767301efc06"
+    },
+    {
+      "case": "classification",
+      "category": "data",
+      "repeat": 1,
+      "run_id": "dd37fb6f5dfb46e2a814ac1cd2b5a3cf",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 3.0162050280196127,
+        "cost": null,
+        "input_tokens": 4558,
+        "known_input_tokens": 4558,
+        "output_tokens": 532,
+        "known_output_tokens": 532,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/dd37fb6f5dfb46e2a814ac1cd2b5a3cf"
+    },
+    {
+      "case": "classification",
+      "category": "data",
+      "repeat": 2,
+      "run_id": "d2d1cdb59411457685ea5ae7e34d846d",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 2.6719747520110104,
+        "cost": null,
+        "input_tokens": 4558,
+        "known_input_tokens": 4558,
+        "output_tokens": 548,
+        "known_output_tokens": 548,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/d2d1cdb59411457685ea5ae7e34d846d"
+    },
+    {
+      "case": "classification",
+      "category": "data",
+      "repeat": 3,
+      "run_id": "c36b1253709e4f58ad3256fa82468cb2",
+      "first_valid": true,
+      "graph_valid": true,
+      "status": "COMPLETED",
+      "caller_accepted": true,
+      "usage": {
+        "model_calls": 1,
+        "tool_calls": 1,
+        "duration_seconds": 2.6924868049973156,
+        "cost": null,
+        "input_tokens": 4558,
+        "known_input_tokens": 4558,
+        "output_tokens": 532,
+        "known_output_tokens": 532,
+        "unknown": [
+          "cost"
+        ]
+      },
+      "diagnostics": [],
+      "recording_path": "/Users/lw/opensource/DynamicAgentGraph/runs/live-20260911T112435Z/c36b1253709e4f58ad3256fa82468cb2"
+    }
+  ],
+  "quota_exhausted": false,
+  "summary": {
+    "runs": 36,
+    "first_valid": 32,
+    "graph_valid": 34,
+    "completed": 34,
+    "caller_accepted": 34
+  }
+}

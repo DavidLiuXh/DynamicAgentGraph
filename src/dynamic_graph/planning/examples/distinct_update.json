@@ -1,0 +1,215 @@
+{
+  "case_name": "evidence_counts",
+  "goal": {
+    "objective": "Combine both evidence-count entries into a dictionary indexed by key using the registered index reducer.",
+    "success_criteria": [
+      {
+        "id": "exact_sources",
+        "description": "Use every supplied authorized source, preserve its data exactly, and return all requested fields."
+      }
+    ],
+    "context": {},
+    "inputs": {
+      "topic": "evidence_counts"
+    },
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "topic"
+      ],
+      "additionalProperties": false
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "counts"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "capability_keys": [
+    "example.evidence_counts_0@1.0.0",
+    "example.evidence_counts_1@1.0.0",
+    "example.index@1.0.0"
+  ],
+  "response": {
+    "response_version": "1.0",
+    "outcome": "graph",
+    "graph": {
+      "dsl_version": "1.0",
+      "state_fields": {
+        "counts": {
+          "value_schema": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "update_schema": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "key",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "initial": {
+            "literal": {}
+          },
+          "reducer": {
+            "name": "example.index",
+            "version": "1.0.0",
+            "config": {}
+          }
+        }
+      },
+      "nodes": [
+        {
+          "id": "source_0",
+          "kind": "tool",
+          "capability": {
+            "name": "example.evidence_counts_0",
+            "version": "1.0.0"
+          },
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "topic": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "topic"
+            ],
+            "additionalProperties": false
+          },
+          "input_bindings": {
+            "topic": {
+              "source": "input",
+              "pointer": "/topic"
+            }
+          },
+          "output_schema": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "key",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "writes": [
+            {
+              "field": "counts",
+              "output_pointer": "/value"
+            }
+          ],
+          "depends_on": []
+        },
+        {
+          "id": "source_1",
+          "kind": "tool",
+          "capability": {
+            "name": "example.evidence_counts_1",
+            "version": "1.0.0"
+          },
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "topic": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "topic"
+            ],
+            "additionalProperties": false
+          },
+          "input_bindings": {
+            "topic": {
+              "source": "input",
+              "pointer": "/topic"
+            }
+          },
+          "output_schema": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "key",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "writes": [
+            {
+              "field": "counts",
+              "output_pointer": "/value"
+            }
+          ],
+          "depends_on": []
+        }
+      ],
+      "outputs": {
+        "counts": {
+          "source": "state",
+          "field": "counts",
+          "pointer": ""
+        }
+      }
+    },
+    "diagnostics": []
+  }
+}

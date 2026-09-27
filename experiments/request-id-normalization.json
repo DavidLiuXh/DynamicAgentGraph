@@ -1,0 +1,4 @@
+{
+  "records_normalized": 60,
+  "rule": "Preserve historical LangChain IDs as local_call_id; unknown provider_request_id becomes null. Graph files and hashes are unchanged."
+}

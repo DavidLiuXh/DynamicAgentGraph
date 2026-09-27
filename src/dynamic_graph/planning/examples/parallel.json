@@ -1,0 +1,252 @@
+{
+  "case_name": "literature",
+  "goal": {
+    "objective": "Collect findings from both synthetic literature sources; deduplicate by id, sort by id, and preserve text.",
+    "success_criteria": [
+      {
+        "id": "exact_sources",
+        "description": "Use every supplied authorized source, preserve its data exactly, and return all requested fields."
+      }
+    ],
+    "context": {},
+    "inputs": {
+      "topic": "literature"
+    },
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "topic"
+      ],
+      "additionalProperties": false
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "text"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "findings"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "capability_keys": [
+    "example.literature_0@1.0.0",
+    "example.literature_1@1.0.0"
+  ],
+  "response": {
+    "response_version": "1.0",
+    "outcome": "graph",
+    "graph": {
+      "dsl_version": "1.0",
+      "state_fields": {
+        "findings": {
+          "value_schema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "text"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "update_schema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "text"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "initial": {
+            "literal": []
+          },
+          "reducer": {
+            "name": "builtin.merge_by_key",
+            "version": "1.0.0",
+            "config": {
+              "key": "id",
+              "on_conflict": "error"
+            }
+          }
+        }
+      },
+      "nodes": [
+        {
+          "id": "source_0",
+          "kind": "tool",
+          "capability": {
+            "name": "example.literature_0",
+            "version": "1.0.0"
+          },
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "topic": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "topic"
+            ],
+            "additionalProperties": false
+          },
+          "input_bindings": {
+            "topic": {
+              "source": "input",
+              "pointer": "/topic"
+            }
+          },
+          "output_schema": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "text"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "writes": [
+            {
+              "field": "findings",
+              "output_pointer": "/value"
+            }
+          ],
+          "depends_on": []
+        },
+        {
+          "id": "source_1",
+          "kind": "tool",
+          "capability": {
+            "name": "example.literature_1",
+            "version": "1.0.0"
+          },
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "topic": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "topic"
+            ],
+            "additionalProperties": false
+          },
+          "input_bindings": {
+            "topic": {
+              "source": "input",
+              "pointer": "/topic"
+            }
+          },
+          "output_schema": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "text"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "writes": [
+            {
+              "field": "findings",
+              "output_pointer": "/value"
+            }
+          ],
+          "depends_on": []
+        }
+      ],
+      "outputs": {
+        "findings": {
+          "source": "state",
+          "field": "findings",
+          "pointer": ""
+        }
+      }
+    },
+    "diagnostics": []
+  }
+}

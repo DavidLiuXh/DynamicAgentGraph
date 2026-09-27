@@ -1,0 +1,575 @@
+{
+  "$defs": {
+    "CapabilityRef": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "CapabilityRef",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "LiteralBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "literal": {
+          "$ref": "#/$defs/JsonValue"
+        }
+      },
+      "required": [
+        "literal"
+      ],
+      "title": "LiteralBinding",
+      "type": "object"
+    },
+    "NodeSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[A-Za-z][A-Za-z0-9_]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "llm",
+            "tool",
+            "check"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "instruction": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Required nonempty task instruction for llm; omit or null for tool/check.",
+          "title": "Instruction"
+        },
+        "capability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CapabilityRef"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Required exact authorized name/version for tool/check; omit or null for llm."
+        },
+        "model_role": {
+          "anyOf": [
+            {
+              "const": "worker",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Must be worker for every llm node; omit or null for tool/check.",
+          "title": "Model Role"
+        },
+        "input_schema": {
+          "$ref": "#/$defs/SchemaSpec"
+        },
+        "input_bindings": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/LiteralBinding"
+              },
+              {
+                "$ref": "#/$defs/ReferenceBinding"
+              }
+            ]
+          },
+          "title": "Input Bindings",
+          "type": "object"
+        },
+        "output_schema": {
+          "$ref": "#/$defs/SchemaSpec"
+        },
+        "writes": {
+          "items": {
+            "$ref": "#/$defs/WriteSpec"
+          },
+          "title": "Writes",
+          "type": "array"
+        },
+        "depends_on": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Depends On",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "input_schema",
+        "input_bindings",
+        "output_schema",
+        "writes",
+        "depends_on"
+      ],
+      "title": "NodeSpec",
+      "type": "object"
+    },
+    "ReducerBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 128,
+          "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$",
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "title": "Version",
+          "type": "string"
+        },
+        "config": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Config",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "ReducerBinding",
+      "type": "object"
+    },
+    "ReferenceBinding": {
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "enum": [
+            "input",
+            "state"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Field"
+        },
+        "pointer": {
+          "title": "Pointer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "pointer"
+      ],
+      "title": "ReferenceBinding",
+      "type": "object"
+    },
+    "SchemaSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "enum": [
+                "object",
+                "array",
+                "string",
+                "integer",
+                "number",
+                "boolean",
+                "null"
+              ],
+              "type": "string"
+            },
+            {
+              "items": {
+                "enum": [
+                  "object",
+                  "array",
+                  "string",
+                  "integer",
+                  "number",
+                  "boolean",
+                  "null"
+                ],
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Type"
+        },
+        "properties": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/SchemaSpec"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Properties"
+        },
+        "required": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Required"
+        },
+        "additionalProperties": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "$ref": "#/$defs/SchemaSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Additionalproperties"
+        },
+        "items": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SchemaSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "enum": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/JsonValue"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Enum"
+        },
+        "minimum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum"
+        },
+        "maximum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum"
+        },
+        "exclusiveMinimum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exclusiveminimum"
+        },
+        "exclusiveMaximum": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Exclusivemaximum"
+        },
+        "minLength": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minlength"
+        },
+        "maxLength": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxlength"
+        },
+        "minItems": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minitems"
+        },
+        "maxItems": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxitems"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "$defs": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "$ref": "#/$defs/SchemaSpec"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "$Defs"
+        },
+        "$ref": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "$Ref"
+        }
+      },
+      "title": "SchemaSpec",
+      "type": "object"
+    },
+    "StateField": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        },
+        "value_schema": {
+          "$ref": "#/$defs/SchemaSpec"
+        },
+        "update_schema": {
+          "$ref": "#/$defs/SchemaSpec"
+        },
+        "initial": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LiteralBinding"
+            },
+            {
+              "$ref": "#/$defs/ReferenceBinding"
+            }
+          ],
+          "title": "Initial"
+        },
+        "reducer": {
+          "$ref": "#/$defs/ReducerBinding"
+        }
+      },
+      "required": [
+        "value_schema",
+        "update_schema",
+        "initial",
+        "reducer"
+      ],
+      "title": "StateField",
+      "type": "object"
+    },
+    "WriteSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "output_pointer": {
+          "title": "Output Pointer",
+          "type": "string"
+        }
+      },
+      "required": [
+        "field",
+        "output_pointer"
+      ],
+      "title": "WriteSpec",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "dsl_version": {
+      "const": "1.0",
+      "title": "Dsl Version",
+      "type": "string"
+    },
+    "state_fields": {
+      "additionalProperties": {
+        "$ref": "#/$defs/StateField"
+      },
+      "title": "State Fields",
+      "type": "object"
+    },
+    "nodes": {
+      "items": {
+        "$ref": "#/$defs/NodeSpec"
+      },
+      "maxItems": 32,
+      "minItems": 1,
+      "title": "Nodes",
+      "type": "array"
+    },
+    "outputs": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ReferenceBinding"
+      },
+      "title": "Outputs",
+      "type": "object"
+    }
+  },
+  "required": [
+    "dsl_version",
+    "state_fields",
+    "nodes",
+    "outputs"
+  ],
+  "title": "GraphSpec",
+  "type": "object"
+}

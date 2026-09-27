@@ -1,0 +1,212 @@
+{
+  "case_name": "normalized_names",
+  "goal": {
+    "objective": "Read the raw names, trim whitespace and uppercase them while preserving order. Use the registered processing capability on the source data.",
+    "success_criteria": [
+      {
+        "id": "exact_sources",
+        "description": "Use every supplied authorized source, preserve its data exactly, and return all requested fields."
+      }
+    ],
+    "context": {},
+    "inputs": {
+      "topic": "normalized_names"
+    },
+    "input_schema": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "topic"
+      ],
+      "additionalProperties": false
+    },
+    "output_schema": {
+      "type": "object",
+      "properties": {
+        "names": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "names"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "capability_keys": [
+    "example.normalized_names_0@1.0.0",
+    "example.normalized_names_process@1.0.0"
+  ],
+  "response": {
+    "response_version": "1.0",
+    "outcome": "graph",
+    "graph": {
+      "dsl_version": "1.0",
+      "state_fields": {
+        "raw_names": {
+          "value_schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "update_schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "initial": {
+            "literal": []
+          },
+          "reducer": {
+            "name": "builtin.replace",
+            "version": "1.0.0",
+            "config": {}
+          }
+        },
+        "names": {
+          "value_schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "update_schema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "initial": {
+            "literal": []
+          },
+          "reducer": {
+            "name": "builtin.replace",
+            "version": "1.0.0",
+            "config": {}
+          }
+        }
+      },
+      "nodes": [
+        {
+          "id": "source_0",
+          "kind": "tool",
+          "capability": {
+            "name": "example.normalized_names_0",
+            "version": "1.0.0"
+          },
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "topic": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "topic"
+            ],
+            "additionalProperties": false
+          },
+          "input_bindings": {
+            "topic": {
+              "source": "input",
+              "pointer": "/topic"
+            }
+          },
+          "output_schema": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "writes": [
+            {
+              "field": "raw_names",
+              "output_pointer": "/value"
+            }
+          ],
+          "depends_on": []
+        },
+        {
+          "id": "process",
+          "kind": "tool",
+          "capability": {
+            "name": "example.normalized_names_process",
+            "version": "1.0.0"
+          },
+          "input_schema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "data"
+            ],
+            "additionalProperties": false
+          },
+          "input_bindings": {
+            "data": {
+              "source": "state",
+              "field": "raw_names",
+              "pointer": ""
+            }
+          },
+          "output_schema": {
+            "type": "object",
+            "properties": {
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          "writes": [
+            {
+              "field": "names",
+              "output_pointer": "/value"
+            }
+          ],
+          "depends_on": [
+            "source_0"
+          ]
+        }
+      ],
+      "outputs": {
+        "names": {
+          "source": "state",
+          "field": "names",
+          "pointer": ""
+        }
+      }
+    },
+    "diagnostics": []
+  }
+}
