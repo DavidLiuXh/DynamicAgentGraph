@@ -4,6 +4,12 @@
 
 负责人：本次 Codex 实施任务。首次验收时尚未建立 Git 仓库；2026-09-27 已创建私有 GitHub 仓库并提交。首次验收的代码 Hash 见 [历史审计报告](experiments/final-audit.json)。未采集净工程工时，原任务表的人日估算不视为实际工时。凭据仅保存在被忽略的本地 `.env`，权限 0600，未纳入发布包。用户已授权真实模型测试，无费用总上限；配额耗尽时停止开发并通知。
 
+## 2026-09-30 统一注册内置能力
+
+新增 `DynamicGraphEngine.register_builtin_capabilities()`：保留三种默认内置 Reducer 的特化绑定机制，并注册包内 Tavily 工具。当前包没有内置 check 或其他 tool。接口可重复调用并保留已有同名同版本注册；Tavily 首次注册读取环境中的密钥，缺失或空白时明确报错，目录不变。注册不发出请求、不修改允许列表，也不影响其他 Engine。
+
+新增7项测试，覆盖完整目录、重复调用、三种缺失配置、配置后重试、手工注册与实例隔离，以及授权/未授权的目标到执行结果闭环。Python 3.12全量 **205/205通过**（`-W error`），见 [回归记录](experiments/builtin-registration-pytest-312.xml)。Ruff检查及格式检查通过，临时目录中的sdist和wheel构建成功。README及设计文档已同步；本次没有额外付费模型或搜索请求。
+
 ## 2026-09-30 Tavily 搜索工具
 
 新增 `dynamic_graph.tools.tavily_search_tool()`，返回可直接注册的 `tavily.search@1.0.0`。基于官方 Search REST 接口异步调用，使用现有 ToolDefinition、允许列表、调用预算、超时、重试和节点输出校验；没有增加搜索框架或第二套工具调度。HTTPX 从既有传递依赖声明为直接依赖，锁定版本仍为0.28.1。

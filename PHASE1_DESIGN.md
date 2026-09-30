@@ -115,6 +115,7 @@ flowchart TD
 
 ~~~python
 engine = DynamicGraphEngine(config=engine_config, models=model_bindings)
+engine.register_builtin_capabilities()
 engine.register_tool(tool_definition)
 engine.register_evaluator(evaluator_definition)
 engine.register_reducer(reducer_definition)
@@ -132,6 +133,8 @@ result = await engine.run(
 EngineConfig 包含 runs_dir、实例级并发上限、记录模式、大小限制及脱敏器。ModelBindings 在初始化时绑定 planner、worker 两个角色到本库 ModelClient；角色可以指向同一个实例。每次运行的模型选择从已绑定别名中选取，不由 GraphSpec 任意填写提供商或访问地址。
 
 对外查询返回不可变 CapabilityInfo，不返回 handler、凭据、内部 Registry 或 LangGraph 对象。相同 Engine 可并行 run；每次运行拥有独立 run_id、状态、记录目录和能力快照。执行过程中进行的注册只影响后续运行。
+
+`register_builtin_capabilities()` 显式准备包内全部内置能力，返回 None。当前包含 capabilities 下默认可用的三种内置 Reducer，以及 tools 下的 tavily.search@1.0.0；当前没有内置 check 或其他 tool。Reducer 保留按字段 Schema 特化的绑定机制，不作为普通用户 Reducer 重复注册。Tavily 首次注册读取环境变量 TAVILY_API_KEY，缺失或空白时抛出 ConfigurationError，目录保持不变；库不自动读取 .env，注册不发起网络请求。重复调用保留已有同名同版本注册和其凭据绑定，只影响当前 Engine。此入口不修改 ExecutionPolicy 的允许列表，Tavily 必须逐次运行显式授权；原有手工注册接口仍拒绝重复注册。
 
 内部测试和开发命令支持“加载 graph.json 后验证与编译”；首版不将任意 GraphSpec 执行作为稳定业务 API。GraphSpec 版本化是为了记录和编译兼容，不代表承诺公共构图 SDK。
 
