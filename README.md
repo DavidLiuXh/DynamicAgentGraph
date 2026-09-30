@@ -85,6 +85,39 @@ asyncio.run(main())
 
 ## 契约与扩展
 
+### Tavily 网页搜索
+
+配置环境变量 `TAVILY_API_KEY`，或在创建工具时传入 `api_key`。库不会自动读取 `.env`。使用已有 Engine 注册工具，并在该次运行的允许列表中授权：
+
+```python
+from dynamic_graph import ExecutionPolicy, GoalSpec
+from dynamic_graph.tools import tavily_search_tool
+
+
+async def search_web(engine):
+    tool = tavily_search_tool()
+    engine.register_tool(tool)  # 同一 Engine 只需注册一次。
+    return await engine.run(
+        goal=GoalSpec(
+            objective="搜索 LangGraph 官方文档，返回搜索结果和来源链接",
+            inputs={"query": "LangGraph official graph API documentation"},
+            input_schema=tool.input_schema,
+            output_schema=tool.output_schema,
+        ),
+        policy=ExecutionPolicy(allowed_tools=["tavily.search@1.0.0"]),
+    )
+```
+
+工具名为 `tavily.search`，版本 `1.0.0`。输入 `query` 是非空字符串，`max_results` 可省略（默认 5），范围 1–20。查询的输入 Schema 应使用上述契约；静态验证会保守检查字符串长度和结果数量约束。输出包含 `query` 和 `results`，每条结果保留 `title`、`url`、`content` 摘要及 `score`。无结果时返回空数组；网页内容作为来源数据交给下游节点处理。
+
+按 [Tavily Search 官方接口](https://docs.tavily.com/documentation/api-reference/endpoint/search)，工具使用异步 HTTP 请求、Bearer 认证以及 `basic` / `general` 搜索，显式关闭自动参数和生成答案、原文、图片。每个节点尝试只发出一次请求，超时使用剩余节点期限；网络错误、429 和 5xx 交给引擎有限重试，400/401/403/422 及 432/433 配额错误不重试。执行失败通过既有 `TOOL_FAILED` 诊断返回；响应类型错误由节点输出校验拒绝。
+
+API key 仅保存在 handler 绑定中，不进入能力目录、规划输入或图文件。提供商错误正文不返回到诊断；`tvly-` 密钥模式也由现有凭据规则处理。Tavily 请求消耗工具调用预算；实际信用点和费用没有可靠计价记录，不计为零。HTTP 替身测试验证完整执行链和故障边界；2026-09-30 单次真实搜索返回 2 条文档来源，输出 Schema 校验通过，见[实测记录](experiments/tavily-smoke-result.json)。这次单请求探测不代表长期可用性或搜索质量基准。
+
+单次真实接口验收可运行 `.venv/bin/python experiments/tavily_smoke.py`。脚本显式读取本地 `.env`（环境中的 `TAVILY_API_KEY` 优先），仅发送公开文档查询并保存标题、链接和分数摘要；不保存密钥或完整正文。该脚本会消耗 Tavily 信用点，执行器库仍不自动读取 `.env`。
+
+### 自定义能力
+
 - `ModelClient` 只有异步 `generate(ModelRequest) -> ModelResponse`。普通用户可直接使用自带适配器；测试可使用 FakeModelClient。它不管理规划、重试或总预算。
 - 工具和 Evaluator 是可信的异步 Python 函数，只收到声明的输入投影和 CallContext。首版只执行声明为只读的能力；注册成功不证明函数行为安全。
 - `ReducerDefinition` 接受具体的 V/U/config Schema、初始值检查和纯同步函数。`assert_reducer_permutations` 提供顺序扰动测试；自定义代码的正确性仍由注册者负责。

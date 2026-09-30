@@ -9,6 +9,7 @@ description = "Validated goal-to-DAG planning and execution with dynamic state"
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
 dependencies = [
+  "httpx>=0.28,<1",
   "pydantic>=2.11,<3",
   "jsonschema>=4.23,<5",
   "langgraph>=1.0,<2",
