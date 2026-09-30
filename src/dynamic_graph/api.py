@@ -36,6 +36,18 @@ class DynamicGraphEngine:
         self._registry = Registry()
         self._semaphore = asyncio.Semaphore(self.config.max_parallelism)
 
+    def register_builtin_capabilities(self) -> None:
+        """Register packaged capabilities without granting execution permission.
+
+        The three built-in reducers are available from construction. Tavily uses
+        TAVILY_API_KEY when first registered; existing registrations are preserved.
+        No network requests are made here.
+        """
+        from .tools import tavily_search_tool
+
+        if self.get_capability("tavily.search", "1.0.0") is None:
+            self.register_tool(tavily_search_tool())
+
     def register_tool(self, definition):
         if definition.kind != "tool":
             raise ValueError("register_tool requires a tool definition")

@@ -51,7 +51,7 @@ def mock_api(monkeypatch):
     return install
 
 
-def setup_engine(tmp_path, *, allowed=True, max_results=None):
+def setup_engine(tmp_path, *, allowed=True, max_results=None, builtin=False):
     tool = tavily_search_tool(api_key=KEY)
     bindings = {"query": {"source": "input", "pointer": "/query"}}
     if max_results is not None:
@@ -89,7 +89,10 @@ def setup_engine(tmp_path, *, allowed=True, max_results=None):
     engine = DynamicGraphEngine(
         config=EngineConfig(runs_dir=tmp_path), models=ModelBindings(fake, fake)
     )
-    engine.register_tool(tool)
+    if builtin:
+        engine.register_builtin_capabilities()
+    else:
+        engine.register_tool(tool)
     goal = GoalSpec(
         objective="Search for documentation and preserve source links",
         inputs={"query": RESULT["query"]},
@@ -100,6 +103,21 @@ def setup_engine(tmp_path, *, allowed=True, max_results=None):
         allowed_tools=["tavily.search@1.0.0"] if allowed else [], max_planning_rounds=1
     )
     return engine, goal, policy, fake
+
+
+@pytest.mark.parametrize("allowed", [True, False])
+async def test_builtin_registration_obeys_execution_policy(
+    tmp_path, monkeypatch, mock_api, allowed
+):
+    monkeypatch.setenv("TAVILY_API_KEY", KEY)
+    requests = mock_api(lambda _: httpx.Response(200, json=RESULT))
+    engine, goal, policy, fake = setup_engine(tmp_path, allowed=allowed, builtin=True)
+    assert not requests
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == ("COMPLETED" if allowed else "FAILED")
+    assert len(requests) == (1 if allowed else 0)
+    assert KEY not in json.dumps(fake.requests[0].input_data)
+    assert result.outputs == (RESULT if allowed else {})
 
 
 @pytest.mark.parametrize("max_results", [None, 2])

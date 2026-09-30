@@ -85,28 +85,37 @@ asyncio.run(main())
 
 ## 契约与扩展
 
+### 统一注册内置能力
+
+初始化 Engine 后调用 `engine.register_builtin_capabilities()`，即可准备当前包提供的全部内置能力：`capabilities` 中的 `builtin.replace`、`builtin.merge_by_key`、`builtin.merge_map_strict` 三种 reducer，以及 `tools` 中的 `tavily.search`，版本均为 `1.0.0`。当前没有内置 check 或其他内置 tool；业务工具和 evaluator 仍使用各自的注册接口。
+
+三种 reducer 在 Engine 创建时已经可用，统一入口保留其按图字段 Schema 特化的绑定方式。Tavily 首次注册从环境变量 `TAVILY_API_KEY` 读取密钥；缺失或空白时抛出 `ConfigurationError`，能力目录保持不变，配置后可再次调用。库不自动读取 `.env`，注册也不会发出网络请求。
+
+该接口返回 `None`，可重复调用；已有同名同版本能力会保留，包含通过 `tavily_search_tool(api_key=...)` 手工注册的工具。更改环境变量不会替换已注册工具的密钥。注册仅作用于当前 Engine，不修改 `ExecutionPolicy`；每次运行仍需显式授权 Tavily。可用 `list_capabilities()` 和 `get_capability()` 查询注册结果。
+
 ### Tavily 网页搜索
 
 配置环境变量 `TAVILY_API_KEY`，或在创建工具时传入 `api_key`。库不会自动读取 `.env`。使用已有 Engine 注册工具，并在该次运行的允许列表中授权：
 
 ```python
 from dynamic_graph import ExecutionPolicy, GoalSpec
-from dynamic_graph.tools import tavily_search_tool
 
 
 async def search_web(engine):
-    tool = tavily_search_tool()
-    engine.register_tool(tool)  # 同一 Engine 只需注册一次。
+    engine.register_builtin_capabilities()
+    tool = engine.get_capability("tavily.search", "1.0.0").to_dict()
     return await engine.run(
         goal=GoalSpec(
             objective="搜索 LangGraph 官方文档，返回搜索结果和来源链接",
             inputs={"query": "LangGraph official graph API documentation"},
-            input_schema=tool.input_schema,
-            output_schema=tool.output_schema,
+            input_schema=tool["input_schema"],
+            output_schema=tool["output_schema"],
         ),
         policy=ExecutionPolicy(allowed_tools=["tavily.search@1.0.0"]),
     )
 ```
+
+若需要直接传入密钥，也可使用 `from dynamic_graph.tools import tavily_search_tool`，再调用 `engine.register_tool(tavily_search_tool(api_key=...))`。
 
 工具名为 `tavily.search`，版本 `1.0.0`。输入 `query` 是非空字符串，`max_results` 可省略（默认 5），范围 1–20。查询的输入 Schema 应使用上述契约；静态验证会保守检查字符串长度和结果数量约束。输出包含 `query` 和 `results`，每条结果保留 `title`、`url`、`content` 摘要及 `score`。无结果时返回空数组；网页内容作为来源数据交给下游节点处理。
 
