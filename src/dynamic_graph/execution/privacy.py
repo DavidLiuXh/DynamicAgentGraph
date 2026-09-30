@@ -6,7 +6,7 @@ from pydantic import JsonValue
 
 REDACTED = "[REDACTED]"
 SENSITIVE_KEYS = frozenset({"api_key", "password", "access_token", "authorization"})
-API_KEY = re.compile(r"\bsk-[A-Za-z0-9_-]{16,}")
+API_KEY = re.compile(r"\b(?:sk|tvly)-[A-Za-z0-9_-]{16,}")
 
 
 def _redact_string(value: str, sensitive_values: tuple[str, ...]) -> str:
