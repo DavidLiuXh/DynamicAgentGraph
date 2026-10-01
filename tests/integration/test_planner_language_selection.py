@@ -40,10 +40,17 @@ async def test_initial_and_repair_prompts_follow_goal_and_are_recorded(
     assert correction.input_data["repair"]["validation_errors"]
     run_dir = Path(result.recording["path"])
     manifest = json.loads((run_dir / "manifest.json").read_text())
+    planning_time = manifest["planning_started_at_utc"]
+    assert (
+        initial.input_data["current_time_utc"]
+        == correction.input_data["current_time_utc"]
+        == planning_time
+    )
     for key, value in versions.items():
         assert manifest[key] == value
     for attempt in (1, 2):
         recorded = json.loads((run_dir / f"planning/request-{attempt:02d}.json").read_text())
         assert recorded["prompt_language"] == language
+        assert recorded["current_time_utc"] == planning_time
         assert recorded["prompt_hash"] == versions["prompt_hash"]
         assert recorded["repair_hash"] == versions["repair_hash"]

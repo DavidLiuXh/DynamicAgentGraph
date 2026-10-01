@@ -1,5 +1,6 @@
 import asyncio
 import time
+from datetime import UTC, datetime
 
 from pydantic import ValidationError
 
@@ -19,11 +20,14 @@ async def plan(goal, snapshot, policy, model, config, budget, recorder, semaphor
         "生成 PlanningResponse。" if language == "zh" else "Generate PlanningResponse."
     )
     recorder.manifest.update(versions)
+    planning_time = datetime.now(UTC).isoformat()
+    recorder.manifest["planning_started_at_utc"] = planning_time
     previous, errors = None, []
     last_code = "GRAPH_GENERATION_FAILED"
     for attempt in range(1, policy.max_planning_rounds + 1):
         budget.check()
         data = planning_data(goal, snapshot, policy, previous, errors, attempt)
+        data["current_time_utc"] = planning_time
         if len(canonical([system, schema, data])) > config.max_planner_input_bytes:
             raise RunFailure(
                 "PLANNER_CONTEXT_TOO_LARGE",
@@ -36,6 +40,7 @@ async def plan(goal, snapshot, policy, model, config, budget, recorder, semaphor
                 **versions,
                 "model": getattr(model, "metadata", {"model": "unknown"}),
                 "attempt": attempt,
+                "current_time_utc": planning_time,
                 "role": "planner",
                 "max_output_tokens": config.max_output_tokens,
                 "remaining_model_calls": policy.max_model_calls - budget.model_calls,
