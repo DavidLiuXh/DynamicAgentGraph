@@ -85,6 +85,14 @@ asyncio.run(main())
 
 ## 契约与扩展
 
+### 规划提示词语言
+
+Engine 根据 `GoalSpec.objective` 自动选择规划提示词：包含中文汉字时使用现有中文版本，否则使用新增的等义英文版本。简体、繁体和中英混合目标均走中文；其他无汉字语言也使用英文。这里采用汉字字符判定，不做完整的自然语言识别，含汉字的日文也会走中文。`inputs`、成功标准、Schema、工具描述和示例不参与语言选择，保持调用方原始数据不变。
+
+首次规划与后续修复使用同一语言。中文文件为 `planner_system_v1.txt`、`planner_repair_v1.txt`，英文文件为 `planner_system_v1_en.txt`、`planner_repair_v1_en.txt`；二者共享 PlanningResponse、GraphSpec 和示例契约。manifest 与每轮规划请求记录 `prompt_language`（`zh` / `en`）及所选提示词 Hash。此规则选择提示词语言，不保证节点交付文本的语言；业务要求应在目标和输出契约中明确。
+
+中文模板正文未改动，但无汉字目标现在使用英文模板。此前中文模板的模型验收结果是历史证据，不能作为新英文版本的成功率；本次离线测试验证选词、修复、记录和执行行为，不宣称英文质量优于中文。
+
 ### Tavily 网页搜索
 
 配置环境变量 `TAVILY_API_KEY`，或在创建工具时传入 `api_key`。库不会自动读取 `.env`。使用已有 Engine 注册工具，并在该次运行的允许列表中授权：

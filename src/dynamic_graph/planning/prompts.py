@@ -1,5 +1,6 @@
 import hashlib
 import json
+import unicodedata
 from importlib.resources import files
 
 from ..capabilities.catalog import BUILTIN_REDUCER_CATALOG
@@ -16,10 +17,27 @@ def examples():
     ]
 
 
-def resources():
+def prompt_language(objective):
+    """Use Chinese for objectives containing Han characters, English otherwise."""
+    return (
+        "zh"
+        if any(
+            unicodedata.name(character, "").startswith(
+                ("CJK UNIFIED IDEOGRAPH", "CJK COMPATIBILITY IDEOGRAPH")
+            )
+            for character in objective
+        )
+        else "en"
+    )
+
+
+def resources(language="zh"):
+    if language not in {"zh", "en"}:
+        raise ValueError("Planner prompt language must be zh or en")
     root = files("dynamic_graph.planning") / "prompts"
-    system = (root / "planner_system_v1.txt").read_text(encoding="utf-8")
-    repair = (root / "planner_repair_v1.txt").read_text(encoding="utf-8")
+    suffix = "_en" if language == "en" else ""
+    system = (root / f"planner_system_v1{suffix}.txt").read_text(encoding="utf-8")
+    repair = (root / f"planner_repair_v1{suffix}.txt").read_text(encoding="utf-8")
     schema = PlanningResponse.model_json_schema()
 
     def digest(value):
@@ -31,6 +49,7 @@ def resources():
         schema,
         {
             "prompt_version": "1.0",
+            "prompt_language": language,
             "prompt_hash": digest(system.encode()),
             "repair_hash": digest(repair.encode()),
             "schema_hash": digest(canonical(schema)),

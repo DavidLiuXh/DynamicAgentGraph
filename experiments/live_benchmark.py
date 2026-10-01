@@ -22,7 +22,7 @@ async def main():
     report = {
         "started_at": datetime.now(UTC).isoformat(),
         "model": client.metadata,
-        "versions": resources()[3],
+        "versions": {language: resources(language)[3] for language in ("zh", "en")},
         "runs": [],
         "quota_exhausted": False,
     }

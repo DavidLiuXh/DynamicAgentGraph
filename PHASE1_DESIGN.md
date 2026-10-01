@@ -113,6 +113,8 @@ flowchart TD
 
 ### 7. 公共 API
 
+规划与修复提示词跟随 GoalSpec.objective：含汉字使用原中文模板，否则使用等义英文模板；中英混合目标走中文。只根据目标描述选择，不依据业务输入、Schema或工具描述；这是字符判定而非完整语言识别，含汉字的日文亦走中文。首次规划和全部修复固定使用所选语言，记录 prompt_language 及对应模板 Hash；不修改目标内容、机器契约、能力授权或模型绑定，也不保证交付文本语言。
+
 ~~~python
 engine = DynamicGraphEngine(config=engine_config, models=model_bindings)
 engine.register_tool(tool_definition)
