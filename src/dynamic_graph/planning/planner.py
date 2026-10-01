@@ -8,12 +8,16 @@ from ..execution.privacy import contains_sensitive, redact_sensitive
 from ..graph.schemas import canonical
 from ..graph.validation import validate_graph
 from ..models.client import ModelCallError, ModelRequest
-from .prompts import planning_data, resources
+from .prompts import planning_data, prompt_language, resources
 from .responses import PlanningResponse
 
 
 async def plan(goal, snapshot, policy, model, config, budget, recorder, semaphore):
-    system, repair_template, schema, versions = resources()
+    language = prompt_language(goal.objective)
+    system, repair_template, schema, versions = resources(language)
+    initial_instruction = (
+        "生成 PlanningResponse。" if language == "zh" else "Generate PlanningResponse."
+    )
     recorder.manifest.update(versions)
     previous, errors = None, []
     last_code = "GRAPH_GENERATION_FAILED"
@@ -39,7 +43,7 @@ async def plan(goal, snapshot, policy, model, config, budget, recorder, semaphor
                 "reconstruction_complete": config.recording_mode == "debug",
                 "messages": {
                     "system": system,
-                    "task_instruction": repair_template if errors else "Generate PlanningResponse.",
+                    "task_instruction": repair_template if errors else initial_instruction,
                     "input_data": data,
                 }
                 if config.recording_mode == "debug"
@@ -55,9 +59,7 @@ async def plan(goal, snapshot, policy, model, config, budget, recorder, semaphor
                     ModelRequest(
                         role="planner",
                         system_instruction=system,
-                        task_instruction=repair_template
-                        if errors
-                        else "Generate PlanningResponse.",
+                        task_instruction=repair_template if errors else initial_instruction,
                         input_data=data,
                         output_schema=schema,
                         max_output_tokens=config.max_output_tokens,

@@ -29,7 +29,9 @@ def summarize(values):
 def main():
     path = Path("experiments/live-20260911T113444Z.json")
     live = json.loads(path.read_text())
-    versions = resources()[3]
+    # This report audits the fixed September Chinese-prompt runs, not new routing.
+    system, _, _, versions = resources("zh")
+    del versions["prompt_language"]  # The historical records predate this field.
     fixtures = {c.name: c for c in cases()}
     rows = []
     for row in live["runs"]:
@@ -38,7 +40,7 @@ def main():
         snapshot = case.engine("runs")._registry.snapshot(case.policy)
         request = json.loads((root / "planning/request-01.json").read_text())
         assert all(request[k] == v for k, v in versions.items())
-        assert request["messages"]["system"] == resources()[0]
+        assert request["messages"]["system"] == system
         assert request["messages"]["input_data"] == planning_data(case.goal, snapshot, case.policy)
         events = [json.loads(line) for line in (root / "events.jsonl").read_text().splitlines()]
 

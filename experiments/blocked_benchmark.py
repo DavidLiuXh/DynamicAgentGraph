@@ -79,7 +79,7 @@ async def main():
     report = {
         "started_at": datetime.now(UTC).isoformat(),
         "model": model.metadata,
-        "versions": resources()[3],
+        "versions": resources("en")[3],
         "runs": [],
         "quota_exhausted": False,
     }
