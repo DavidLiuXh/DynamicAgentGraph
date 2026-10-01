@@ -4,6 +4,18 @@
 
 负责人：本次 Codex 实施任务。首次验收时尚未建立 Git 仓库；2026-09-27 已创建私有 GitHub 仓库并提交。首次验收的代码 Hash 见 [历史审计报告](experiments/final-audit.json)。未采集净工程工时，原任务表的人日估算不视为实际工时。凭据仅保存在被忽略的本地 `.env`，权限 0600，未纳入发布包。用户已授权真实模型测试，无费用总上限；配额耗尽时停止开发并通知。
 
+## 2026-10-02 通用网页获取与本地交付工具
+
+新增file.read_text、file.write_text、browser.open_local_page、web.fetch四个1.0.0工具。文件与浏览器默认root=/tmp，可指定其他已存在目录；拒绝空路径、目录本身、越界及指向目录外的符号链接。UTF-8读写默认上限1MiB，写入原子提交，覆盖须显式指定。浏览器仅打开已有HTML，返回launch_requested，不声称渲染成功；不提供任意命令执行。
+
+ExecutionPolicy增加默认空的allowed_side_effect_tools，非只读tool须同时取得普通与副作用授权，否则不进入规划快照。副作用不自动重试，即使声明幂等或返回可重试错误也只调用一次；图后续失败/取消不回滚已完成动作。check仍只读。注册时effect/concurrency声明必须为布尔值。
+
+web.fetch获取HTTP/HTTPS文本，无域名/端口白名单，支持最多三次跨域重定向、正文大小与期限限制，不执行JavaScript。返回最终URL、正文、Content-Type和UTC抓取时间，不对来源的历史或实时性质预先作判断。网页中的所需信息由任务LLM节点按输出Schema提取，不提供站点专用工具或解析器。结构校验不保证语义提取准确性，原始HTML也可能超过模型上下文限制。
+
+experiments/web_page_demo.py接受--url和--information，演示抓取→信息提取→HTML生成→文件写入→浏览器请求；默认输出/tmp/page.html，覆盖须--overwrite。该示例需要DeepSeek凭据，会发出付费模型请求并执行本地副作用；本次仅验证命令帮助和替身链路，未运行真实模型或浏览器。
+
+新增57项测试，同一提取/交付图支持GitHub和另一个网页地址；覆盖正文与来源传递、结构化提取结果、提取失败时不执行本地副作用、双重授权、路径/字节/超时/取消边界、macOS/Linux/Windows启动参数替身，以及HTTP错误和重定向。Python3.12全量267/267通过（-W error），见[回归记录](experiments/local-web-tools-pytest-312.xml)；Ruff检查和格式检查通过。不将历史专用工具或旧提示词的真实模型记录作为当前通用流程的验证证据。
+
 ## 2026-10-01 中英文规划提示词
 
 新增与中文版本等义的英文 system/repair 模板，按 GoalSpec.objective 中是否包含汉字选择中文或英文；混合目标走中文，业务输入不参与判定。初次规划和修复保持同一语言，manifest与请求记录增加prompt_language，Hash对应实际模板。中文模板正文未变；无汉字目标的提示词已经变化，历史中文模型验收结果不代表英文版本质量。

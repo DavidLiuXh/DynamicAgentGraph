@@ -213,12 +213,64 @@ policy = ExecutionPolicy(allowed_tools=["company.web_search@1.0.0"])
 
 Handlers receive validated inputs and a `CallContext` containing the node's deadline. Return JSON matching the declared output Schema. Keep credentials in the handler's private binding rather than its description or Schema. The engine owns node retries, concurrency limits, and cancellation; handlers should respect the remaining deadline and allow cancellation to propagate.
 
-The current execution boundary supports trusted, read-only tools. The included implementation is available in [tavily.py](src/dynamic_graph/tools/tavily.py); use `tavily_search_tool()` directly when no custom behavior is needed. Evaluators and custom reducers are also supported; their detailed contracts are in the [design document](PHASE1_DESIGN.md).
+Tools are trusted Python implementations. The included search implementation is available in [tavily.py](src/dynamic_graph/tools/tavily.py); use `tavily_search_tool()` directly when no custom behavior is needed. Evaluators and custom reducers are also supported; their detailed contracts are in the [design document](PHASE1_DESIGN.md).
+
+### Local files, browser, and web access
+
+The package also provides these tools, all at version `1.0.0`:
+
+| Factory | Capability | Behavior |
+| --- | --- | --- |
+| `file_read_text_tool(root="/tmp")` | `file.read_text` | Read UTF-8 text under the selected directory. |
+| `file_write_text_tool(root="/tmp")` | `file.write_text` | Atomically write UTF-8 text; existing files require `overwrite=true`. |
+| `browser_open_local_page_tool(root="/tmp")` | `browser.open_local_page` | Ask the default browser to open an existing HTML file under that directory. |
+| `web_fetch_tool()` | `web.fetch` | Fetch HTTP/HTTPS text without a domain allowlist, including cross-domain redirects. |
+
+Local tools default to `/tmp`; passing `root` changes their permitted directory. Relative paths are resolved there, and paths or existing symlinks outside it are rejected. The directory and file parent must exist. File and web text operations default to a 1 MiB byte limit. Web fetching executes no JavaScript, allows up to three redirects, and respects the node deadline. The fetcher returns content served by the requested URL; the source determines its time coverage. An LLM node extracts the requested information using a task-specific output Schema. Structural validation does not guarantee extraction accuracy.
+
+```python
+from dynamic_graph.tools import (
+    browser_open_local_page_tool,
+    file_read_text_tool,
+    file_write_text_tool,
+    web_fetch_tool,
+)
+
+tools = [
+    file_read_text_tool(),
+    file_write_text_tool(),
+    browser_open_local_page_tool(),
+    web_fetch_tool(),
+]
+for tool in tools:
+    engine.register_tool(tool)
+policy = ExecutionPolicy(
+    allowed_tools=[tool.name + "@1.0.0" for tool in tools],
+    allowed_side_effect_tools=[
+        "file.write_text@1.0.0",
+        "browser.open_local_page@1.0.0",
+    ],
+)
+# Pass this policy to engine.run.
+```
+
+Side-effect tools must appear in both allowlists; otherwise they are excluded from the planning catalog and cannot execute. Checks remain read-only. Side-effect tools never retry automatically, even if declared idempotent. A browser launch must depend on the file writer; `launch_requested` acknowledges the OS request, not successful rendering. Completed writes and launch requests are not rolled back if later graph execution fails or is cancelled.
+
+For a complete goal-to-page example, configure `DEEPSEEK_API_KEY` and run:
+
+```bash
+uv run python experiments/web_page_demo.py \
+  --url 'https://github.com/trending?since=daily' \
+  --information 'All listed repositories, in page order, including names, links, descriptions and languages' \
+  --output github.html
+```
+
+The same flow accepts other webpage URLs and extraction requests: fetch → LLM extraction → HTML generation → file write → browser request. The example makes paid model calls and writes `/tmp/github.html` before requesting a browser launch. Use `--root` to select another existing directory and `--overwrite` to replace an existing output. Raw HTML may exceed the model context limit even within the fetch byte limit; dynamic pages requiring JavaScript are not supported by `web.fetch`.
 
 ## Results and current scope
 
 `RunResult` provides the execution status, outputs, diagnostics, usage, and local record references. A failed run may retain outputs committed before the failure. `PLANNING_BLOCKED` reports insufficient information, capabilities, or constraints; model authentication and quota failures have separate diagnostics.
 
-Graphs are finite DAGs with typed state and explicit dependencies. Current execution is in-process with local JSON records. Runtime graph changes, loops, resume, automatic model switching, generated Python code, and business write tools are outside the current scope. Model/tool call counts, concurrency, and time limits are enforced; strict total monetary and Token budgets are not yet supported.
+Graphs are finite DAGs with typed state and explicit dependencies. Current execution is in-process with local JSON records. Runtime graph changes, loops, resume, automatic model switching, generated Python code, external transaction guarantees, and rollback are outside the current scope. Model/tool call counts, concurrency, and time limits are enforced; strict total monetary and Token budgets are not yet supported.
 
 No Agent Server, Studio, database, or LangSmith service is required to run the library. See the [roadmap](FUTURE_ROADMAP.md) for later work.

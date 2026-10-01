@@ -201,7 +201,11 @@ def build_node(node, runtime):
                     ctx.recorder.event(
                         "node_failed", node_id=node.id, attempt=attempt, error_code=error.code
                     )
-                    if not error.retryable or attempt >= ctx.policy.max_node_attempts:
+                    if (
+                        not error.retryable
+                        or (entry and not entry.read_only)
+                        or attempt >= ctx.policy.max_node_attempts
+                    ):
                         raise error
                     feedback = [error.code]
                     await asyncio.sleep(min(0.1 * 2 ** (attempt - 1), 1.0))

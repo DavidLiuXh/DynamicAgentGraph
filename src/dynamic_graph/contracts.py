@@ -97,6 +97,7 @@ BUILTIN_REDUCERS = list(BUILTIN_REDUCER_CATALOG)
 
 class ExecutionPolicy(ContractModel):
     allowed_tools: list[str] = Field(default_factory=list)
+    allowed_side_effect_tools: list[str] = Field(default_factory=list)
     allowed_evaluators: list[str] = Field(default_factory=list)
     allowed_reducers: list[str] = Field(default_factory=lambda: list(BUILTIN_REDUCERS))
     max_nodes: int = Field(default=32, ge=1, le=32)

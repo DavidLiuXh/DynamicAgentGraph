@@ -10,6 +10,8 @@
 
 0.5修订落实简洁性与职责边界：单次运行由私有运行对象管理；校验不隐式复制数据；Schema展开与已展开契约比较分开；内置Reducer目录集中定义；自定义脱敏与执行限制分离。保留公开接口与GraphSpec 1.0，未新增框架、扩展协议或配置项。
 
+2026-10-01实现修订：在默认只读边界上，允许通过allowed_side_effect_tools逐项授权可信tool的副作用；check仍只读。新增本地文本读写、默认浏览器打开本地HTML、HTTP/HTTPS网页获取。文件和浏览器工具默认目录为/tmp，调用方可指定其他目录；网页无域名白名单。不提供历史Trending工具，不增加任意程序执行、外部事务、补偿或自动重试副作用。
+
 0.6修订结构化输出Schema的传输边界：只有function_calling将非object根包装为函数参数对象，响应解包后仍保持业务Schema；json_schema和json_mode传递原根类型并由各自响应格式处理。DeepSeek真实兼容记录仍只覆盖function_calling，不据代码路径推断其他模式已经兼容。
 
 ## 第一部分：概要设计
@@ -51,7 +53,7 @@
 | D08 | 每次请求生成独立 run_id 并保存本地记录 | 支持排查、对照和离线编译回归 |
 | D09 | GraphSpec 到可执行 LangGraph 的编译不调用 LLM | 缺陷可复现，职责明确 |
 | D10 | 首版支持执行前生成的有限 DAG、全前置依赖汇聚 | 暂缓循环、运行中增删图、任意 Join |
-| D11 | 首版默认支持只读可信扩展，不执行外部业务写操作 | 幂等与不确定副作用完整设计后再开放 |
+| D11 | 默认仅执行只读可信扩展；副作用tool须同时取得普通授权和逐项副作用授权 | 副作用不自动重试、不保证回滚；check仍只读 |
 | D12 | 只有一个 GraphSpec 内部模型 | 暂不增加相似的 GraphIR 和插件平台 |
 | D13 | 内部使用LangChain Chat Model的结构化输出接口访问backend LLM | 复用现成集成；LangGraph负责执行图，不另建规划Agent |
 | D14 | 固定GraphSpec元Schema，模型在受限Schema语言内设计任务State及节点I/O | 区分DSL结构、任务数据结构与调用方契约；本地校验始终有效 |
@@ -165,6 +167,7 @@ output_schema 可省略时使用固定默认结构：answer 为字符串，evide
 | 配置 | 初值 | 规则 |
 | --- | --- | --- |
 | allowed_tools / evaluators / reducers | 显式列表；默认仅安全内置集合 | 外部能力默认不自动授权；空列表不是全部 |
+| allowed_side_effect_tools | 显式列表，默认空；仅对同时在allowed_tools中的非只读tool有效 | 未双重授权的副作用tool不进入能力快照和规划目录；不得自动重试 |
 | max_nodes | 32 | 包括 llm、tool、check 节点；不含编译器生成的收尾节点 |
 | max_state_fields | 64 | 不含内部控制字段 |
 | max_graph_bytes | 256 KiB | 模型候选和已验证 GraphSpec 均受限 |
@@ -418,7 +421,7 @@ Planner输入仅含规划必要内容；大型业务数据优先提供结构、�
 | 阶段 | 必查规则 | 典型错误 |
 | --- | --- | --- |
 | 语法与版本 | JSON大小、字段、版本、Schema子集 | INVALID_GRAPH_SPEC、UNSUPPORTED_DSL_VERSION |
-| 标识与能力 | id唯一、名称有效、确切版本、允许列表、只读限制 | UNKNOWN_CAPABILITY、CAPABILITY_NOT_ALLOWED |
+| 标识与能力 | id唯一、名称有效、确切版本、允许列表、副作用双重授权；check只读 | UNKNOWN_CAPABILITY、CAPABILITY_NOT_ALLOWED、CAPABILITY_NOT_SUPPORTED |
 | 拓扑 | 依赖节点存在、无自环、Kahn排序覆盖全部节点、至少一节点 | GRAPH_CYCLE、UNKNOWN_DEPENDENCY |
 | Binding | input/state字段与Pointer存在、值必然可用、无隐式转换 | INVALID_BINDING、MISSING_DEPENDENCY |
 | 读写与类型 | 单写/聚合规则、更新类型兼容、所有读者等待全部写者 | CONCURRENT_WRITE_CONFLICT、TYPE_MISMATCH |
@@ -743,7 +746,11 @@ graph.json为必需文件，不提供静默关闭选项。规划从未产生合�
 
 能力允许列表是授权输入，不是由LLM生成。编译和执行都核验绑定；节点只获取显式输入，外部文本按数据处理，不能改变工具集合或资源限制。输入投影减少意外暴露，但无法阻止可信进程内handler自行读取进程可访问资源。
 
-首版拒绝外部业务写工具和未知副作用工具；可信只读工具可能访问有授权数据，调用方负责凭据范围。本库不统一强制人工审批所有动作，也不拥有用户身份系统。未来写操作、审批和沙箱必须通过独立门控后开放。
+默认拒绝未授权副作用；非只读tool须同时出现在allowed_tools和allowed_side_effect_tools，check仍要求只读。已授权副作用无自动重试，即使handler返回可重试错误或声明幂等也只调用一次；后续输出校验、图执行失败或取消不回滚外部动作。注册声明必须为布尔值，可信handler不构成操作系统沙箱。本库不强制统一人工审批，也不拥有用户身份系统；外部事务、未知结果查询与补偿仍属后续范围。
+
+file.read_text/file.write_text/browser.open_local_page工厂默认root=/tmp，指定目录必须存在；解析后的绝对路径须在root内，拒绝已有越界符号链接。UTF-8文本读写默认最多1MiB；写入使用同目录临时文件和原子提交，默认不覆盖，只有overwrite=true才替换已有文件；不自动创建父目录。浏览器工具仅打开已存在.html/.htm，使用系统启动接口，无任意命令参数；成功只表示启动请求被接受。可信目录中操作不保证抵御其他进程并发恶意替换目录，亦不承诺外部动作exactly-once。
+
+web.fetch接受HTTP/HTTPS，不限制域名或端口，不执行JavaScript；默认文本最多1MiB、最多三次重定向，并遵守节点截止时间。网页中的所需信息由LLM节点依据任务输出Schema提取，再交给后续处理节点；本库不内置站点专用解析器。web.fetch保留最终URL、正文、Content-Type和UTC抓取时间；来源内容的时间范围由来源本身决定，结构验证不替代提取准确性验证。Planner输入增加固定于规划开始的current_time_utc，manifest与minimal/debug请求均记录该时间；未指定时区时采用UTC日期。中英文提示词只定义通用规划规则：授权副作用、外部资源的生产/使用依赖、基于运行时间解释时间约束，以及按已确认要求匹配证据和能力保证。不得增加用户未要求的成功标准，也不能超出证据作结论。具体业务语义与限制由目标和工具描述提供，不在通用模板中内置文件、浏览器或榜单策略。
 
 编译不生成Python代码、不eval条件、不加载模型指定模块。LLM误导导致内容错误是上层语义验收需处理的问题；本库仍需确保错误内容不能绕开结构和权限约束。
 

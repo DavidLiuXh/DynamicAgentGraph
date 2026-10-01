@@ -189,10 +189,12 @@ def validate_graph(spec, goal, snapshot, policy):
                     path + "/capability",
                     node.id,
                 )
-            elif entry.read_only is not True:
+            elif entry.read_only is not True and (
+                node.kind != "tool" or node.capability.key not in policy.allowed_side_effect_tools
+            ):
                 error(
                     "CAPABILITY_NOT_SUPPORTED",
-                    "Only declared read-only capabilities are supported",
+                    "Side-effect tools require explicit authorization; checks must be read-only",
                     path,
                     node.id,
                 )
