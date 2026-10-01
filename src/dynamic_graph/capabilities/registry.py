@@ -120,6 +120,11 @@ class Registry:
                     raise ValueError("Unknown capability kind")
                 if not inspect.iscoroutinefunction(definition.handler):
                     raise ValueError("Tool/check handlers must be async")
+                if any(
+                    type(getattr(definition, field)) is not bool
+                    for field in ("read_only", "idempotent", "reentrant")
+                ):
+                    raise ValueError("Tool effect and concurrency declarations must be booleans")
                 for schema in (definition.input_schema, definition.output_schema):
                     validate_schema(schema)
                 if definition.input_schema.get("type") != "object":
@@ -142,7 +147,10 @@ class Registry:
         }
         with self._lock:
             entries = {
-                k: copy_definition(v) for k, v in self._entries.items() if k in allowed[v.kind]
+                k: copy_definition(v)
+                for k, v in self._entries.items()
+                if k in allowed[v.kind]
+                and (v.kind != "tool" or v.read_only or k in policy.allowed_side_effect_tools)
             }
             locks = {k: self._locks[k] for k in entries}
         digest = hashlib.sha256(

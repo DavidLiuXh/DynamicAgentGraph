@@ -213,12 +213,64 @@ policy = ExecutionPolicy(allowed_tools=["company.web_search@1.0.0"])
 
 handler 接收已验证的输入，以及包含节点截止时间的 `CallContext`，返回符合声明输出 Schema 的 JSON。凭据保留在 handler 的私有绑定中，不放入描述或 Schema。节点重试、并发限制与取消由执行器负责；handler 应使用剩余期限，并允许取消传播。
 
-当前执行边界支持可信、只读工具。内置完整实现见 [tavily.py](src/dynamic_graph/tools/tavily.py)；不需要自定义行为时，直接使用 `tavily_search_tool()`。库也支持 Evaluator 和自定义 reducer，详细契约见[设计文档](PHASE1_DESIGN.md)。
+工具由可信 Python 实现提供。内置搜索完整实现见 [tavily.py](src/dynamic_graph/tools/tavily.py)；不需要自定义行为时，直接使用 `tavily_search_tool()`。库也支持 Evaluator 和自定义 reducer，详细契约见[设计文档](PHASE1_DESIGN.md)。
+
+### 本地文件、浏览器与网页访问
+
+库还提供以下工具，版本均为 `1.0.0`：
+
+| 工厂 | 能力名称 | 行为 |
+| --- | --- | --- |
+| `file_read_text_tool(root="/tmp")` | `file.read_text` | 读取指定目录内的 UTF-8 文本。 |
+| `file_write_text_tool(root="/tmp")` | `file.write_text` | 原子写入 UTF-8 文本；覆盖已有文件需 `overwrite=true`。 |
+| `browser_open_local_page_tool(root="/tmp")` | `browser.open_local_page` | 请求默认浏览器打开目录内已存在的 HTML 文件。 |
+| `web_fetch_tool()` | `web.fetch` | 获取 HTTP/HTTPS 文本，无域名白名单，支持跨域重定向。 |
+
+本地工具默认使用 `/tmp`，传入 `root` 可改为其他目录；相对路径在该目录下解析，目录外路径及指向目录外的现有符号链接会被拒绝。指定目录和文件父目录须已存在。文件及网页文本默认上限为 1 MiB。网页工具不执行 JavaScript，最多跟随三次重定向，并遵守节点截止时间。抓取工具返回指定 URL 在请求时提供的内容，其时间覆盖范围由来源决定。所需信息由 LLM 节点按任务输出 Schema 提取；结构验证不保证提取内容完全正确。
+
+```python
+from dynamic_graph.tools import (
+    browser_open_local_page_tool,
+    file_read_text_tool,
+    file_write_text_tool,
+    web_fetch_tool,
+)
+
+tools = [
+    file_read_text_tool(),
+    file_write_text_tool(),
+    browser_open_local_page_tool(),
+    web_fetch_tool(),
+]
+for tool in tools:
+    engine.register_tool(tool)
+policy = ExecutionPolicy(
+    allowed_tools=[tool.name + "@1.0.0" for tool in tools],
+    allowed_side_effect_tools=[
+        "file.write_text@1.0.0",
+        "browser.open_local_page@1.0.0",
+    ],
+)
+# 将此 policy 传给 engine.run。
+```
+
+副作用工具必须同时出现在两个允许列表中，否则不会进入规划目录，也不能执行。check 仍要求只读。副作用工具即使声明幂等也不自动重试。打开新文件的节点必须依赖文件写入节点；`launch_requested` 表示系统接受打开请求，不表示页面渲染成功。后续图执行失败或取消，不会回滚已完成的写入和启动请求。
+
+配置 `DEEPSEEK_API_KEY` 后，可运行完整示例：
+
+```bash
+uv run python experiments/web_page_demo.py \
+  --url 'https://github.com/trending?since=daily' \
+  --information '页面列出的全部仓库，按页面顺序提取名称、链接、描述和编程语言' \
+  --output github.html
+```
+
+同一流程接受其他网页地址和信息提取要求：抓取 → LLM 提取 → HTML 生成 → 文件写入 → 浏览器请求。示例会消耗模型额度，将结果保存为 `/tmp/github.html` 后请求本机浏览器打开。`--root` 可指定其他已存在目录，`--overwrite` 可覆盖已有输出。原始 HTML 即使没有超过抓取字节上限，也可能超过模型上下文限制；`web.fetch` 不支持必须执行 JavaScript 才能获取内容的页面。
 
 ## 结果与当前范围
 
 `RunResult` 提供执行状态、输出、诊断、用量与本地记录引用。失败运行可能保留失败前已提交的输出。`PLANNING_BLOCKED` 表示信息、能力或约束不足；模型认证失败和配额耗尽有独立诊断。
 
-任务图为有限 DAG，具有类型化状态和显式依赖。当前采用进程内执行及本地 JSON 记录；运行期改图、循环、resume、自动模型切换、生成 Python 代码和业务写工具不在当前范围内。调用次数、并发和时间限制有效，尚不支持严格金额及 Token 总预算。
+任务图为有限 DAG，具有类型化状态和显式依赖。当前采用进程内执行及本地 JSON 记录；运行期改图、循环、resume、自动模型切换、生成 Python 代码、外部事务保证和回滚不在当前范围内。调用次数、并发和时间限制有效，尚不支持严格金额及 Token 总预算。
 
 运行本库无需 Agent Server、Studio、数据库或 LangSmith 服务。后续工作见[路线图](FUTURE_ROADMAP.md)。
