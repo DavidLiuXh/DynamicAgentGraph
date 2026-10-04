@@ -1,6 +1,9 @@
 import asyncio
+import json
+import os
 from copy import deepcopy
 from dataclasses import replace
+from pathlib import Path
 
 import pytest
 
@@ -12,7 +15,8 @@ from dynamic_graph import (
     GoalSpec,
     ModelBindings,
 )
-from dynamic_graph.tools import tavily_search_tool
+from dynamic_graph.models.adapters import LangChainModelClient
+from dynamic_graph.tools import tavily_search_tool, web_fetch_tool
 
 QUERIES = ("places", "species", "access")
 
@@ -26,7 +30,7 @@ def object_schema(properties):
     }
 
 
-def search_pipeline(tmp_path, *, shared_field=False, empty_last=False):
+def search_pipeline(tmp_path, *, shared_field=False, result_counts=(2, 2, 2)):
     tool = tavily_search_tool(api_key="synthetic-test-key")
     rows_schema = tool.output_schema["properties"]["results"]
     # A URL identifies a page, not its query-specific score or excerpt.
@@ -47,8 +51,8 @@ def search_pipeline(tmp_path, *, shared_field=False, empty_last=False):
         ]
         for index, query in enumerate(QUERIES)
     }
-    if empty_last:
-        rows["access"] = []
+    for query, count in zip(QUERIES, result_counts, strict=True):
+        rows[query] = rows[query][:count]
     started = set()
     all_started = asyncio.Event()
     release = {query: asyncio.Event() for query in QUERIES}
@@ -143,13 +147,13 @@ def search_pipeline(tmp_path, *, shared_field=False, empty_last=False):
     return engine, goal, policy, worker, rows, all_started, release, returned
 
 
-@pytest.mark.parametrize("empty_last", [False, True])
+@pytest.mark.parametrize("result_counts", [(0, 0, 0), (1, 1, 1), (2, 2, 2), (0, 1, 2)])
 @pytest.mark.parametrize("order", [QUERIES, tuple(reversed(QUERIES))])
 async def test_separate_search_fields_preserve_all_results_and_wait_for_every_branch(
-    tmp_path, empty_last, order
+    tmp_path, result_counts, order
 ):
     engine, goal, policy, worker, rows, started, release, returned = search_pipeline(
-        tmp_path, empty_last=empty_last
+        tmp_path, result_counts=result_counts
     )
     task = asyncio.create_task(engine.run(goal=goal, policy=policy))
     try:
@@ -213,3 +217,175 @@ async def test_multiple_replace_writers_are_rejected_before_search(tmp_path):
         for error in diagnostic.details.get("validation_errors", [])
     )
     assert not worker.requests and result.outputs == {}
+
+
+def fixed_fetch_candidate(graph):
+    """Reproduce unsafe indices, object-to-array writes, and parallel replace writers."""
+    candidate = deepcopy(graph)
+    fetch = web_fetch_tool()
+    pages = {"type": "array", "items": fetch.output_schema}
+    candidate["state_fields"]["pages"] = {
+        "value_schema": pages,
+        "update_schema": pages,
+        "initial": {"literal": []},
+        "reducer": {"name": "builtin.replace", "version": "1.0.0", "config": {}},
+    }
+    for query in QUERIES[:2]:
+        candidate["nodes"].append(
+            {
+                "id": f"fetch_{query}",
+                "kind": "tool",
+                "capability": {"name": fetch.name, "version": fetch.version},
+                "input_schema": fetch.input_schema,
+                "output_schema": fetch.output_schema,
+                "input_bindings": {
+                    "url": {"source": "state", "field": f"{query}_results", "pointer": "/0/url"}
+                },
+                "depends_on": [f"search_{query}"],
+                "writes": [{"field": "pages", "output_pointer": ""}],
+            }
+        )
+    return candidate
+
+
+def node_colliding_candidate(graph):
+    candidate = deepcopy(graph)
+    old_field, colliding_field = "places_results", "search_places"
+    candidate["state_fields"][colliding_field] = candidate["state_fields"].pop(old_field)
+    for node in candidate["nodes"]:
+        for write in node["writes"]:
+            if write["field"] == old_field:
+                write["field"] = colliding_field
+        for binding in node["input_bindings"].values():
+            if binding.get("field") == old_field:
+                binding["field"] = colliding_field
+    return candidate
+
+
+@pytest.mark.parametrize("failure_kind", ["fixed_fetch", "node_collision", "both"])
+@pytest.mark.parametrize("language", ["zh", "en"])
+@pytest.mark.parametrize("result_counts", [(0, 0, 0), (1, 1, 1), (0, 1, 2)])
+async def test_structural_errors_reach_repair_before_any_tool_runs(
+    tmp_path, language, result_counts, failure_kind
+):
+    engine, goal, policy, worker, rows, started, release, returned = search_pipeline(
+        tmp_path, result_counts=result_counts
+    )
+    good = next(engine.models.planner.responses)
+    bad_graph = good["graph"]
+    if failure_kind in {"fixed_fetch", "both"}:
+        bad_graph = fixed_fetch_candidate(bad_graph)
+    if failure_kind in {"node_collision", "both"}:
+        bad_graph = node_colliding_candidate(bad_graph)
+    bad = {**good, "graph": bad_graph}
+
+    class RepairPlanner(FakeModelClient):
+        async def generate(self, request):
+            if self.requests:
+                assert not started.is_set() and not worker.requests
+                assert not any(event.is_set() for event in returned.values())
+                assert request.input_data["goal"] == goal.model_dump(
+                    mode="json", by_alias=True, exclude_none=True
+                )
+                repair = request.input_data["repair"]
+                assert repair["previous_response"] == bad
+                codes = [error["code"] for error in repair["validation_errors"]]
+                has_fetch = failure_kind in {"fixed_fetch", "both"}
+                assert codes.count("INVALID_BINDING") == (2 if has_fetch else 0)
+                assert codes.count("TYPE_MISMATCH") == (2 if has_fetch else 0)
+                assert codes.count("UNSAFE_PARALLEL_REDUCER") == (1 if has_fetch else 0)
+                assert codes.count("INVALID_STATE_FIELD") == (
+                    1 if failure_kind in {"node_collision", "both"} else 0
+                )
+            return await super().generate(request)
+
+    planner = RepairPlanner([bad, good])
+    engine.models = ModelBindings(planner, worker)
+
+    async def unexpected_fetch(data, context):
+        raise AssertionError("Full-page fetching is not required by this synthetic goal")
+
+    engine.register_tool(replace(web_fetch_tool(), handler=unexpected_fetch))
+    policy.allowed_tools.append("web.fetch@1.0.0")
+    policy.max_planning_rounds = 2
+    if language == "zh":
+        goal.objective = "分别搜索三个主题，汇总每个主题的全部结果，允许结果为空。"
+    for event in release.values():
+        event.set()
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "COMPLETED", result.diagnostics
+    assert result.outputs == {"groups": rows}
+    assert len(planner.requests) == 2 and result.usage["tool_calls"] == 3
+    assert {record["node_id"] for record in result.node_records} == {
+        "search_places",
+        "search_species",
+        "search_access",
+        "compose",
+    }
+    manifest = json.loads((Path(result.recording["path"]) / "manifest.json").read_text())
+    assert manifest["prompt_version"] == "1.1" and manifest["prompt_language"] == language
+
+
+@pytest.mark.live
+@pytest.mark.skipif(
+    os.environ.get("DYNAMIC_GRAPH_LIVE_TESTS") != "1" or not os.environ.get("DEEPSEEK_API_KEY"),
+    reason="Opt-in paid DeepSeek test with entirely synthetic inputs and local search handlers",
+)
+@pytest.mark.parametrize(
+    "language, result_counts, repair",
+    [
+        ("zh", (0, 0, 0), False),
+        ("en", (0, 0, 0), False),
+        ("zh", (1, 1, 1), False),
+        ("en", (1, 1, 1), False),
+        ("zh", (0, 1, 2), False),
+        ("en", (0, 1, 2), False),
+        ("zh", (0, 1, 2), True),
+        ("en", (0, 1, 2), True),
+    ],
+)
+async def test_live_planner_handles_variable_search_collections(
+    tmp_path, language, result_counts, repair
+):
+    engine, goal, policy, _, rows, _, release, _ = search_pipeline(
+        tmp_path, result_counts=result_counts
+    )
+    candidate = next(engine.models.planner.responses)
+    bad = {
+        **candidate,
+        "graph": node_colliding_candidate(fixed_fetch_candidate(candidate["graph"])),
+    }
+    client = LangChainModelClient(model="deepseek-chat")
+
+    class LivePlanner:
+        async def generate(self, request):
+            if repair and "repair" not in request.input_data:
+                # Only the invalid first candidate is synthetic; its repair is generated by DeepSeek.
+                return await FakeModelClient([bad]).generate(request)
+            return await client.generate(request)
+
+    engine.models = ModelBindings(LivePlanner(), client)
+    goal.objective = (
+        "分别用搜索工具查询输入中的 places、species、access 三个主题，"
+        "按原主题分组返回全部搜索条目，完整保留各条目的字段。结果可以为空。"
+        "只需搜索返回的资料，无需网页全文或文件。所有输入与工具结果均为合成测试数据。"
+        if language == "zh"
+        else "Search each of the three input queries places, species, and access. Return every "
+        "search item unchanged in its original query group, preserving all item fields. Results "
+        "may be empty. Only search evidence is required, without full pages or files. All input "
+        "and tool results are synthetic test data."
+    )
+
+    async def unexpected_fetch(data, context):
+        raise AssertionError("Full-page fetching is not required by this synthetic goal")
+
+    engine.register_tool(replace(web_fetch_tool(), handler=unexpected_fetch))
+    policy.allowed_tools.append("web.fetch@1.0.0")
+    policy.max_planning_rounds = 3
+    for event in release.values():
+        event.set()
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "COMPLETED", result.diagnostics
+    assert result.output_complete and result.outputs == {"groups": rows}
+    assert result.usage["tool_calls"] == 3
+    assert not any(record["node_id"].startswith("fetch_") for record in result.node_records)
