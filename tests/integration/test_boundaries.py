@@ -87,6 +87,8 @@ async def test_conflicting_parallel_reducer_outputs_stay_uncommitted(setup_run, 
     assert len(result.artifacts) == 2
     assert all(a["commit_state"] == "uncommitted" for a in result.artifacts)
     assert any(d.code == "REDUCER_FAILED" for d in result.diagnostics)
+    failure = next(d for d in result.diagnostics if d.code == "REDUCER_FAILED")
+    assert failure.details == {"reason": "key_conflict", "key_field": "id", "field": "findings"}
 
 
 async def test_worker_schema_failure_retries_without_changing_graph(setup_run, reference):

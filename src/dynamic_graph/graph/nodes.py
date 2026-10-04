@@ -143,7 +143,15 @@ def build_node(node, runtime):
                             delta = deepcopy(resolve(output, write.output_pointer))
                             reducer = ctx.report.reducers[write.field]
                             # Validate every field before returning any part of this node update.
-                            reducer.apply(state[write.field]["value"], delta)
+                            try:
+                                reducer.apply(state[write.field]["value"], delta)
+                            except RunFailure as exc:
+                                raise RunFailure(
+                                    exc.code,
+                                    str(exc),
+                                    node_id=node.id,
+                                    details={**exc.details, "field": write.field},
+                                ) from exc
                             updates[write.field] = {"kind": "update", "value": delta}
                         ctx.budget.check()
                         relative = f"artifacts/{node.id}-{attempt}.json"
