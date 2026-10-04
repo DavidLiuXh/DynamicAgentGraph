@@ -144,3 +144,18 @@ async def test_duplicate_json_keys_are_not_accepted_after_provider_parse():
     with pytest.raises(ModelCallError) as caught:
         await LangChainModelClient(chat_model=provider).generate(REQUEST)
     assert caught.value.code == "MODEL_RESPONSE_INVALID"
+
+
+@pytest.mark.parametrize("parsed", [None, {"partial": "not a complete response"}])
+async def test_invalid_normalized_tool_arguments_are_rejected_and_available_for_repair(parsed):
+    data = response(parsed=parsed)
+    data["raw"].content = ""
+    data["raw"].invalid_tool_calls = [
+        {"name": "StructuredResponse", "args": '{"answer": broken}', "error": "parser diagnostic"}
+    ]
+    provider = FakeProvider(data)
+    with pytest.raises(ModelCallError) as caught:
+        await LangChainModelClient(chat_model=provider).generate(REQUEST)
+    assert caught.value.code == "MODEL_RESPONSE_INVALID" and caught.value.retryable
+    assert caught.value.raw_response == '{"answer": broken}'
+    assert "parser diagnostic" not in str(caught.value)

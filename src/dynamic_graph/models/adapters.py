@@ -171,9 +171,14 @@ class LangChainModelClient:
             if isinstance(arguments, str):
                 raw_response = arguments
                 break
+        invalid_calls = getattr(raw, "invalid_tool_calls", []) or []
+        if invalid_calls:
+            arguments = invalid_calls[0].get("args")
+            if isinstance(arguments, str):
+                raw_response = arguments
         if not isinstance(raw_response, str):
             raw_response = None
-        if response.get("parsing_error") is not None or payload is None:
+        if invalid_calls or response.get("parsing_error") is not None or payload is None:
             raise ModelCallError(
                 "MODEL_RESPONSE_INVALID",
                 "Structured response could not be parsed",
