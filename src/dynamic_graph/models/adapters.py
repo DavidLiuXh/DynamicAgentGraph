@@ -179,6 +179,19 @@ class LangChainModelClient:
         if not isinstance(raw_response, str):
             raw_response = None
         if invalid_calls or response.get("parsing_error") is not None or payload is None:
+            details = {}
+            if raw_response:
+                try:
+                    strict_loads(raw_response)
+                except json.JSONDecodeError as error:
+                    details["json_syntax"] = {
+                        "message": error.msg,
+                        "line": error.lineno,
+                        "column": error.colno,
+                        "position": error.pos,
+                    }
+                except ValueError:
+                    details["json_syntax"] = {"message": "Invalid strict JSON"}
             raise ModelCallError(
                 "MODEL_RESPONSE_INVALID",
                 "Structured response could not be parsed",
@@ -186,6 +199,7 @@ class LangChainModelClient:
                 usage=usage,
                 provider_request_id=request_id,
                 raw_response=raw_response,
+                details=details,
             )
         if isinstance(payload, BaseModel):
             payload = payload.model_dump(mode="json")

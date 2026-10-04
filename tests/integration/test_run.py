@@ -188,3 +188,18 @@ async def test_strict_unenforceable_budget_rejected_before_call(setup_run, limit
     result = await engine.run(goal=goal, policy=policy)
     assert result.diagnostics[-1].code == "BUDGET_UNENFORCEABLE"
     assert not model.requests
+
+
+async def test_json_syntax_location_reaches_planning_repair_with_original_response(setup_run, reference):
+    raw = '{"response_version": "1.0"}}, "graph": {}}'
+    failure = ModelCallError(
+        'MODEL_RESPONSE_INVALID', 'Invalid JSON', retryable=True, raw_response=raw,
+        details={'json_syntax': {'message': 'Extra data', 'line': 1, 'column': 27, 'position': 26}},
+    )
+    engine, goal, policy, model = setup_run([failure, envelope(reference), {'report': 'repaired'}])
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == 'COMPLETED'
+    repair = model.requests[1].input_data['repair']
+    assert 'Extra data' in repair['validation_errors'][0]['message']
+    assert '27' in repair['validation_errors'][0]['message']
+    assert raw in json.dumps(repair).replace('\\"', '"')

@@ -1,4 +1,5 @@
 import asyncio
+import json
 import time
 from datetime import UTC, datetime
 
@@ -174,9 +175,11 @@ async def plan(goal, snapshot, policy, model, config, budget, recorder, semaphor
             if not exc.retryable:
                 raise RunFailure(exc.code, str(exc), phase="planning", details=exc.details) from exc
             if exc.code in {"MODEL_RESPONSE_INVALID", "MODEL_RESPONSE_TRUNCATED"}:
-                errors = [
-                    {"code": exc.code, "path": "", "message": "Return a complete valid response"}
-                ]
+                message = "Return a complete valid response"
+                syntax = exc.details.get("json_syntax")
+                if isinstance(syntax, dict):
+                    message += ": " + json.dumps(syntax, ensure_ascii=False)
+                errors = [{"code": exc.code, "path": "", "message": message}]
             else:
                 if attempt < policy.max_planning_rounds:
                     await asyncio.sleep(min(0.1 * 2 ** (attempt - 1), 1.0))

@@ -158,4 +158,6 @@ async def test_invalid_normalized_tool_arguments_are_rejected_and_available_for_
         await LangChainModelClient(chat_model=provider).generate(REQUEST)
     assert caught.value.code == "MODEL_RESPONSE_INVALID" and caught.value.retryable
     assert caught.value.raw_response == '{"answer": broken}'
+    assert caught.value.details["json_syntax"]["position"] == 11
+    assert caught.value.details["json_syntax"]["line"] == 1
     assert "parser diagnostic" not in str(caught.value)
