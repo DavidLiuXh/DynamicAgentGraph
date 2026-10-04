@@ -42,6 +42,15 @@ class BoundReducer:
             validate_value(self.value_schema, result)
             return copy.deepcopy(result)
         except Exception as exc:
+            if isinstance(exc, SchemaError) and exc.code == "REDUCER_KEY_CONFLICT":
+                raise RunFailure(
+                    "REDUCER_FAILED",
+                    "Reducer received different values for the same key",
+                    details={
+                        "reason": "key_conflict",
+                        **({"key_field": config["key"]} if "key" in config else {}),
+                    },
+                ) from exc
             raise RunFailure("REDUCER_FAILED", "Reducer update violated its contract") from exc
 
 
@@ -79,7 +88,7 @@ def bind_reducer(field, snapshot, policy):
                 merged = dict(old)
                 for key, item in delta.items():
                     if key in merged and canonical(merged[key]) != canonical(item):
-                        raise ValueError("Conflicting key")
+                        raise SchemaError("Conflicting key", code="REDUCER_KEY_CONFLICT")
                     merged[key] = item
                 return dict(sorted(merged.items()))
 
@@ -108,7 +117,7 @@ def bind_reducer(field, snapshot, policy):
             for entry in old + delta:
                 ident = entry[cfg["key"]]
                 if ident in merged and canonical(merged[ident]) != canonical(entry):
-                    raise ValueError("Conflicting key")
+                    raise SchemaError("Conflicting key", code="REDUCER_KEY_CONFLICT")
                 merged[ident] = entry
             return [merged[k] for k in sorted(merged)]
 

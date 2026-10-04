@@ -4,7 +4,7 @@ from typing import Annotated, TypedDict
 from ..execution.errors import RunFailure
 
 
-def make_cell_reducer(bound):
+def make_cell_reducer(bound, field_name):
     def merge(previous, incoming):
         if incoming["kind"] == "init":
             if previous:
@@ -12,14 +12,21 @@ def make_cell_reducer(bound):
             return {"kind": "value", "value": bound.initial(incoming["value"])}
         if not previous or previous.get("kind") != "value":
             raise RunFailure("REDUCER_FAILED", "Update before state initialization")
-        return {"kind": "value", "value": bound.apply(previous["value"], incoming["value"])}
+        try:
+            value = bound.apply(previous["value"], incoming["value"])
+        except RunFailure as exc:
+            raise RunFailure(
+                exc.code, str(exc), details={**exc.details, "field": field_name}
+            ) from exc
+        return {"kind": "value", "value": value}
 
     return merge
 
 
 def build_state(report):
     annotations = {
-        name: Annotated[dict, make_cell_reducer(bound)] for name, bound in report.reducers.items()
+        name: Annotated[dict, make_cell_reducer(bound, name)]
+        for name, bound in report.reducers.items()
     }
     annotations["__committed_nodes"] = Annotated[dict, lambda old, delta: {**old, **delta}]
     return TypedDict("DynamicState", annotations)
