@@ -117,6 +117,23 @@ class LangChainModelClient:
             ) from exc
         except Exception as exc:
             # Never expose raw provider exceptions: they can embed request bodies or credentials.
+            # Some SDKs reject truncated structured output before returning the
+            # raw message. Preserve the same classification as the raw path.
+            completion = getattr(exc, "completion", None)
+            if any(
+                getattr(choice, "finish_reason", None) in {"length", "max_tokens"}
+                for choice in getattr(completion, "choices", ())
+            ):
+                token_usage = getattr(completion, "usage", None)
+                raise ModelCallError(
+                    "MODEL_RESPONSE_TRUNCATED",
+                    "Model response was truncated",
+                    usage={
+                        "input_tokens": getattr(token_usage, "prompt_tokens", None),
+                        "output_tokens": getattr(token_usage, "completion_tokens", None),
+                    },
+                    provider_request_id=getattr(completion, "id", None),
+                ) from exc
             status = getattr(exc, "status_code", None)
             body = getattr(exc, "body", {}) or {}
             code = body.get("code", "") if isinstance(body, dict) else ""
@@ -169,7 +186,6 @@ class LangChainModelClient:
             raise ModelCallError(
                 "MODEL_RESPONSE_TRUNCATED",
                 "Model response was truncated",
-                retryable=True,
                 usage=usage,
                 provider_request_id=request_id,
             )

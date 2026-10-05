@@ -102,6 +102,38 @@ async def test_response_failure_classification(case, expected):
     assert caught.value.code == expected
 
 
+async def test_sdk_length_exception_preserves_usage_without_retrying_partial_json():
+    from openai import LengthFinishReasonError
+    from openai.types.chat import ChatCompletion
+
+    completion = ChatCompletion(
+        id="truncated-request", object="chat.completion", created=0, model="test",
+        choices=[{"index": 0, "finish_reason": "length", "message": {
+            "role": "assistant", "content": '{"unfinished":',
+        }}],
+        usage={"prompt_tokens": 10, "completion_tokens": 2048, "total_tokens": 2058},
+    )
+    provider = FakeProvider(exception=LengthFinishReasonError(completion=completion))
+    with pytest.raises(ModelCallError) as caught:
+        await LangChainModelClient(chat_model=provider).generate(REQUEST)
+    error = caught.value
+    assert error.code == "MODEL_RESPONSE_TRUNCATED"
+    assert error.retryable is False
+    assert error.usage == {"input_tokens": 10, "output_tokens": 2048}
+    assert error.provider_request_id == "truncated-request"
+    assert error.raw_response is None
+    assert provider.calls == 1
+
+
+async def test_raw_response_truncation_does_not_retry_the_same_output_budget():
+    data = response()
+    data["raw"].response_metadata["finish_reason"] = "length"
+    with pytest.raises(ModelCallError) as caught:
+        await LangChainModelClient(chat_model=FakeProvider(data)).generate(REQUEST)
+    assert caught.value.code == "MODEL_RESPONSE_TRUNCATED"
+    assert caught.value.retryable is False
+
+
 async def test_cancellation_is_not_normalized():
     provider = FakeProvider(exception=asyncio.CancelledError())
     with pytest.raises(asyncio.CancelledError):
