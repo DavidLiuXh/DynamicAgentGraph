@@ -161,3 +161,39 @@ async def test_invalid_normalized_tool_arguments_are_rejected_and_available_for_
     assert caught.value.details["json_syntax"]["position"] == 11
     assert caught.value.details["json_syntax"]["line"] == 1
     assert "parser diagnostic" not in str(caught.value)
+
+
+@pytest.mark.parametrize("mode", ["json_mode", "function_calling"])
+@pytest.mark.parametrize("enforce_budget", [True, False])
+async def test_real_structured_pipeline_binds_each_request_output_limit(monkeypatch, mode, enforce_budget):
+    import json
+    from dataclasses import replace
+
+    import httpx
+    from langchain_openai import ChatOpenAI
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    bodies = []
+
+    async def send(request):
+        bodies.append(json.loads(request.content))
+        message = {"role": "assistant", "content": "{}"}
+        if mode == "function_calling":
+            message = {"role": "assistant", "content": None, "tool_calls": [
+                {"id": "test-call", "type": "function", "function": {"name": "StructuredResponse", "arguments": "{}"}}
+            ]}
+        return httpx.Response(200, request=request, json={
+            "id": "test", "object": "chat.completion", "created": 1, "model": "test-model",
+            "choices": [{"index": 0, "finish_reason": "stop", "message": message}],
+        })
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(send)) as http_client:
+        provider = ChatOpenAI(model="test-model", max_retries=0, http_async_client=http_client)
+        client = LangChainModelClient(chat_model=provider, mode=mode, allow_json_mode=mode == "json_mode", enforce_output_budget=enforce_budget)
+        await asyncio.gather(*(
+            client.generate(replace(REQUEST, max_output_tokens=limit)) for limit in (17, 29)
+        ))
+    limits = sorted(body.get("max_completion_tokens", body.get("max_tokens", 0)) for body in bodies)
+    assert limits == ([17, 29] if enforce_budget else [0, 0])
+    assert client.metadata["output_budget_enforced"] is enforce_budget
+    assert provider.max_tokens is None  # No mutation of a shared provider between concurrent calls.

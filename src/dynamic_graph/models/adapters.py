@@ -23,6 +23,7 @@ class LangChainModelClient:
         allow_json_mode=False,
         chat_model=None,
         max_output_tokens=16384,
+        enforce_output_budget=True,
     ):
         if mode not in {"function_calling", "json_schema", "json_mode"}:
             raise ValueError("Unsupported structured output mode")
@@ -31,6 +32,9 @@ class LangChainModelClient:
         self.mode = mode
         self.model = model
         self.max_output_tokens = max_output_tokens
+        # Opt-out is used by frozen evaluation graders whose historical HTTP
+        # request omitted this parameter; product clients enforce it by default.
+        self.enforce_output_budget = enforce_output_budget
         if chat_model is None:
             from langchain_openai import ChatOpenAI
 
@@ -52,8 +56,9 @@ class LangChainModelClient:
         return {
             "model": self.model,
             "mode": self.mode,
-            "adapter_version": "1.0",
-            "max_output_tokens": self.max_output_tokens,
+            "adapter_version": "1.1",
+            "max_output_tokens": self.max_output_tokens if self.enforce_output_budget else None,
+            "output_budget_enforced": self.enforce_output_budget,
         }
 
     async def generate(self, request: ModelRequest) -> ModelResponse:
@@ -97,9 +102,13 @@ class LangChainModelClient:
                 schema,
                 method=self.mode,
                 include_raw=True,
+                **({"max_tokens": min(request.max_output_tokens, self.max_output_tokens)}
+                   if self.enforce_output_budget else {}),
             )
             async with asyncio.timeout(request.timeout_seconds):
-                response = await runnable.ainvoke(messages, max_tokens=request.max_output_tokens)
+                # include_raw creates a RunnableParallel that drops invocation
+                # kwargs. Bind generation parameters before composing the parser.
+                response = await runnable.ainvoke(messages)
         except asyncio.CancelledError:
             raise
         except TimeoutError as exc:
