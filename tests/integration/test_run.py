@@ -65,6 +65,45 @@ async def test_repair_and_network_retry_share_round_budget(setup_run, reference)
     assert model.requests[2].input_data["repair"]["validation_errors"]
 
 
+@pytest.mark.parametrize("recovered", [False, True])
+async def test_truncated_worker_regenerates_compact_output_within_attempt_budget(
+    setup_run, reference, recovered
+):
+    error = ModelCallError(
+        "MODEL_RESPONSE_TRUNCATED",
+        "Provider output cut off",
+        retryable=True,
+        usage={"input_tokens": 20, "output_tokens": 8},
+    )
+    engine, goal, policy, model = setup_run(
+        [
+            envelope(reference),
+            error,
+            {"report": "compact"} if recovered else error,
+        ]
+    )
+    result = await engine.run(goal=goal, policy=policy)
+    calls = [request for request in model.requests if request.role == "worker"]
+    assert len(calls) == policy.max_node_attempts == 2
+    assert calls[0].input_data == calls[1].input_data
+    assert calls[0].output_schema == calls[1].output_schema
+    assert calls[1].timeout_seconds <= calls[0].timeout_seconds
+    assert "MODEL_RESPONSE_TRUNCATED" in calls[1].task_instruction
+    assert "compact JSON" in calls[1].task_instruction
+    assert "Preserve all required" in calls[1].task_instruction
+    worker = next(node["id"] for node in reference["nodes"] if node["kind"] == "llm")
+    worker_artifacts = [artifact for artifact in result.artifacts if artifact["node_id"] == worker]
+    if recovered:
+        assert result.execution_status == "COMPLETED" and result.output_complete
+        assert result.outputs["report"] == "compact"
+        assert [artifact["attempt"] for artifact in worker_artifacts] == [2]
+    else:
+        assert result.execution_status == "FAILED" and not result.output_complete
+        assert "report" not in result.outputs and len(result.outputs["findings"]) == 2
+        assert not worker_artifacts
+        assert result.diagnostics[-1].code == "MODEL_RESPONSE_TRUNCATED"
+
+
 async def test_blocked_is_terminal_without_graph_or_tools(setup_run):
     blocked = {
         "response_version": "1.0",
@@ -190,16 +229,21 @@ async def test_strict_unenforceable_budget_rejected_before_call(setup_run, limit
     assert not model.requests
 
 
-async def test_json_syntax_location_reaches_planning_repair_with_original_response(setup_run, reference):
+async def test_json_syntax_location_reaches_planning_repair_with_original_response(
+    setup_run, reference
+):
     raw = '{"response_version": "1.0"}}, "graph": {}}'
     failure = ModelCallError(
-        'MODEL_RESPONSE_INVALID', 'Invalid JSON', retryable=True, raw_response=raw,
-        details={'json_syntax': {'message': 'Extra data', 'line': 1, 'column': 27, 'position': 26}},
+        "MODEL_RESPONSE_INVALID",
+        "Invalid JSON",
+        retryable=True,
+        raw_response=raw,
+        details={"json_syntax": {"message": "Extra data", "line": 1, "column": 27, "position": 26}},
     )
-    engine, goal, policy, model = setup_run([failure, envelope(reference), {'report': 'repaired'}])
+    engine, goal, policy, model = setup_run([failure, envelope(reference), {"report": "repaired"}])
     result = await engine.run(goal=goal, policy=policy)
-    assert result.execution_status == 'COMPLETED'
-    repair = model.requests[1].input_data['repair']
-    assert 'Extra data' in repair['validation_errors'][0]['message']
-    assert '27' in repair['validation_errors'][0]['message']
+    assert result.execution_status == "COMPLETED"
+    repair = model.requests[1].input_data["repair"]
+    assert "Extra data" in repair["validation_errors"][0]["message"]
+    assert "27" in repair["validation_errors"][0]["message"]
     assert raw in json.dumps(repair).replace('\\"', '"')
