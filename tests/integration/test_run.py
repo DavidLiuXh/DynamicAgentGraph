@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from dynamic_graph import CancellationToken, ModelCallError
-from dynamic_graph.execution.errors import RunFailure
+from dynamic_graph import CancellationToken, EngineConfig, ModelCallError
+from dynamic_graph.execution.errors import RunFailure, ToolCallError
 from dynamic_graph.graph.spec import GraphSpec
 from dynamic_graph.recording.local import Recorder
 
@@ -32,6 +32,66 @@ async def test_goal_to_graph_to_result_and_recording(setup_run):
     assert [e["seq"] for e in events] == list(range(1, len(events) + 1))
     assert all(r["commit_state"] == "committed" for r in result.node_records)
     assert all(a["commit_state"] == "committed" for a in result.artifacts)
+
+
+@pytest.mark.parametrize("slot_limit", ["run", "engine"])
+async def test_waiting_for_call_slot_preserves_node_execution_budget(setup_run, tmp_path, slot_limit):
+    async def handler(data, context):
+        await asyncio.sleep(0.3)
+        return {"findings": [{"id": context.node_id, "text": data["query"]}]}
+
+    config = EngineConfig(runs_dir=tmp_path, max_parallelism=1 if slot_limit == "engine" else 8)
+    engine, goal, policy, _ = setup_run(handler=handler, config=config)
+    policy = policy.model_copy(update={
+        "max_parallelism": 1 if slot_limit == "run" else 4,
+        "node_timeout_seconds": 0.5,
+        "run_timeout_seconds": 3,
+    })
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "COMPLETED"
+    assert len(result.outputs["findings"]) == 2
+    tools = [record for record in result.node_records if record["node_id"] in {"search_a", "search_b"}]
+    assert max(record["resource_wait_seconds"] for record in tools) >= 0.25
+    events = [json.loads(line) for line in
+              (Path(result.recording["path"]) / "events.jsonl").read_text().splitlines()]
+    assert any(event["event_type"] == "node_resources_acquired" for event in events)
+
+
+async def test_waiting_for_call_slot_cannot_extend_run_deadline(setup_run):
+    async def handler(data, context):
+        await asyncio.sleep(0.25)
+        return {"findings": [{"id": context.node_id, "text": data["query"]}]}
+
+    engine, goal, policy, model = setup_run(handler=handler)
+    policy = policy.model_copy(update={
+        "max_parallelism": 1, "node_timeout_seconds": 1, "run_timeout_seconds": 0.4,
+    })
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "FAILED"
+    assert result.diagnostics[-1].code == "DEADLINE_EXCEEDED"
+    assert result.outputs == {}
+    assert all(request.role == "planner" for request in model.requests)
+
+
+async def test_retry_keeps_deadline_from_first_resource_acquisition(setup_run):
+    deadlines = []
+
+    async def handler(data, context):
+        if context.node_id == "search_b":
+            return {"findings": [{"id": context.node_id, "text": data["query"]}]}
+        deadlines.append(context.deadline)
+        await asyncio.sleep(0.25)
+        if context.attempt == 1:
+            raise ToolCallError("temporary", retryable=True)
+        return {"findings": [{"id": context.node_id, "text": data["query"]}]}
+
+    engine, goal, policy, _ = setup_run(handler=handler)
+    policy = policy.model_copy(update={"node_timeout_seconds": 0.45, "run_timeout_seconds": 3})
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "FAILED"
+    assert result.diagnostics[-1].code == "DEADLINE_EXCEEDED"
+    assert len(deadlines) == 2 and deadlines[0] == deadlines[1]
+    assert result.outputs == {}
 
 
 async def test_caller_can_revise_goal_as_new_linked_run(setup_run):

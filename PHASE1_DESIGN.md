@@ -179,10 +179,12 @@ output_schema 可省略时使用固定默认结构：answer 为字符串，evide
 | max_model_calls | 40 | 包括规划、修复、节点模型调用及其重试 |
 | max_tool_calls | 64 | 每次真正发起调用均计数 |
 | run_timeout_seconds | 600 | 规划、编译、执行均计入 |
-| node_timeout_seconds | 60 | 实际值还受剩余运行时长约束 |
+| node_timeout_seconds | 60 | 首次取得能力锁、运行和 Engine 并发名额后开始计时；受剩余运行时长和工具 timeout_hint 约束，重试沿用同一期限 |
 | max_cost / max_tokens | 默认不设置 | 首版保留兼容字段；任何非None值均在调用前返回BUDGET_UNENFORCEABLE，目前没有可靠上界配置入口 |
 
 调用预算使用异步锁原子预留；完成后结算，取消也记录已发起调用。计费未知写 null/unknown，不写零。严格费用限制缺乏价格或最大输出估计时，在执行前返回 BUDGET_UNENFORCEABLE。不能在结果到账后才说已保证不超预算。
+
+首次调用前的资源排队受整轮运行期限约束，不消耗节点执行时限。首次调用开始后的验证、重试退避及再次排队都计入同一节点时限，不为每次尝试重置。节点记录中的 resource_wait_seconds 累计资源等待时间；node_resources_acquired 事件标记实际取得资源的时刻。
 
 首版重试不切换模型、不增加能力，不改变目标或输出 Schema。允许备选模型的自动故障转移留待后续。使用者可在新运行中更换已绑定模型或策略。
 

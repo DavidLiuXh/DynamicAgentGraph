@@ -61,7 +61,9 @@ def build_node(node, runtime):
         ctx = runtime
         record = ctx.records[node.id]
         record["started_after_seconds"] = time.monotonic() - ctx.budget.started
-        deadline = min(ctx.budget.deadline, time.monotonic() + ctx.policy.node_timeout_seconds)
+        # Queueing is bounded by the run deadline. Start the shared node budget
+        # only when its first call has acquired all required resources.
+        deadline = ctx.budget.deadline
         try:
             values = unwrap(state)
             projected = {
@@ -74,11 +76,9 @@ def build_node(node, runtime):
                 "NODE_INPUT_INVALID", "Node input does not satisfy contract", node_id=node.id
             ) from exc
         entry = ctx.snapshot.entries.get(node.capability.key) if node.capability else None
-        if entry and entry.timeout_hint is not None:
-            deadline = min(deadline, time.monotonic() + entry.timeout_hint)
         feedback = []
         try:
-            async with asyncio.timeout_at(deadline):
+            async with asyncio.timeout_at(deadline) as node_timer:
                 for attempt in range(1, ctx.policy.max_node_attempts + 1):
                     ctx.budget.check()
                     record.update(
@@ -86,6 +86,7 @@ def build_node(node, runtime):
                     )
                     ctx.recorder.event("node_started", node_id=node.id, attempt=attempt)
                     try:
+                        wait_started = time.monotonic()
                         async with AsyncExitStack() as stack:
                             # Waiting for a non-reentrant capability does not occupy a global call slot.
                             if entry and not entry.reentrant:
@@ -94,6 +95,21 @@ def build_node(node, runtime):
                                 )
                             await stack.enter_async_context(ctx.run_semaphore)
                             await stack.enter_async_context(ctx.engine_semaphore)
+                            acquired = time.monotonic()
+                            waited = acquired - wait_started
+                            record["resource_wait_seconds"] = (
+                                record.get("resource_wait_seconds", 0) + waited
+                            )
+                            ctx.recorder.event(
+                                "node_resources_acquired", node_id=node.id, attempt=attempt
+                            )
+                            if attempt == 1:
+                                deadline = min(
+                                    ctx.budget.deadline, acquired + ctx.policy.node_timeout_seconds
+                                )
+                                if entry and entry.timeout_hint is not None:
+                                    deadline = min(deadline, acquired + entry.timeout_hint)
+                                node_timer.reschedule(deadline)
                             await ctx.budget.reserve("model" if node.kind == "llm" else "tool")
                             if node.kind == "llm":
                                 try:
