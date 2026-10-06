@@ -219,8 +219,11 @@ def build_node(node, runtime):
                     ctx.recorder.event(
                         "node_failed", node_id=node.id, attempt=attempt, error_code=error.code
                     )
+                    content_repair = node.kind == "llm" and error.code in {
+                        "MODEL_RESPONSE_TRUNCATED", "MODEL_RESPONSE_INVALID"
+                    }
                     if (
-                        not error.retryable
+                        (not error.retryable and not content_repair)
                         or (entry and not entry.read_only)
                         or attempt >= ctx.policy.max_node_attempts
                     ):
@@ -228,6 +231,11 @@ def build_node(node, runtime):
                     feedback = [error.code]
                     if error.code == "MODEL_RESPONSE_TRUNCATED":
                         feedback.append(TRUNCATED_RESPONSE_REPAIR)
+                    if content_repair:
+                        ctx.recorder.event(
+                            "node_content_repair", node_id=node.id, attempt=attempt + 1,
+                            error_code=error.code,
+                        )
                     await asyncio.sleep(min(0.1 * 2 ** (attempt - 1), 1.0))
         except asyncio.CancelledError:
             record.update({"status": "cancelled", "commit_state": "uncommitted"})

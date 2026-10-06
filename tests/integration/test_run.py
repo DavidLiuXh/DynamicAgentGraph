@@ -66,13 +66,14 @@ async def test_repair_and_network_retry_share_round_budget(setup_run, reference)
 
 
 @pytest.mark.parametrize("recovered", [False, True])
+@pytest.mark.parametrize("transport_retryable", [False, True])
 async def test_truncated_worker_regenerates_compact_output_within_attempt_budget(
-    setup_run, reference, recovered
+    setup_run, reference, recovered, transport_retryable
 ):
     error = ModelCallError(
         "MODEL_RESPONSE_TRUNCATED",
         "Provider output cut off",
-        retryable=True,
+        retryable=transport_retryable,
         usage={"input_tokens": 20, "output_tokens": 8},
     )
     engine, goal, policy, model = setup_run(
@@ -102,6 +103,21 @@ async def test_truncated_worker_regenerates_compact_output_within_attempt_budget
         assert "report" not in result.outputs and len(result.outputs["findings"]) == 2
         assert not worker_artifacts
         assert result.diagnostics[-1].code == "MODEL_RESPONSE_TRUNCATED"
+
+
+@pytest.mark.parametrize("limit", ["attempts", "model_calls"])
+async def test_content_regeneration_cannot_bypass_execution_budgets(setup_run, reference, limit):
+    error = ModelCallError("MODEL_RESPONSE_TRUNCATED", "Truncated", retryable=False)
+    engine, goal, policy, model = setup_run([envelope(reference), error, {"report": "compact"}])
+    policy = policy.model_copy(update={"max_node_attempts": 1} if limit == "attempts"
+                               else {"max_model_calls": 2})
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "FAILED" and not result.output_complete
+    assert len([r for r in model.requests if r.role == "worker"]) == 1
+    assert "report" not in result.outputs
+    assert result.diagnostics[-1].code == (
+        "MODEL_RESPONSE_TRUNCATED" if limit == "attempts" else "CALL_BUDGET_EXHAUSTED"
+    )
 
 
 async def test_blocked_is_terminal_without_graph_or_tools(setup_run):
