@@ -9,7 +9,7 @@ from ..execution.errors import RunFailure
 from ..execution.privacy import contains_sensitive, redact_sensitive
 from ..graph.schemas import canonical
 from ..graph.validation import validate_graph
-from ..models.client import ModelCallError, ModelRequest
+from ..models.client import ModelCallError, ModelRequest, expanded_output_budget
 from .prompts import planning_data, prompt_language, resources
 from .responses import PlanningResponse
 
@@ -25,6 +25,8 @@ async def plan(goal, snapshot, policy, model, config, budget, recorder, semaphor
     recorder.manifest["planning_started_at_utc"] = planning_time
     previous, errors = None, []
     last_code = "GRAPH_GENERATION_FAILED"
+    output_budget = config.max_output_tokens
+    budget_expanded = False
     for attempt in range(1, policy.max_planning_rounds + 1):
         budget.check()
         data = planning_data(goal, snapshot, policy, previous, errors, attempt)
@@ -43,7 +45,7 @@ async def plan(goal, snapshot, policy, model, config, budget, recorder, semaphor
                 "attempt": attempt,
                 "current_time_utc": planning_time,
                 "role": "planner",
-                "max_output_tokens": config.max_output_tokens,
+                "max_output_tokens": output_budget,
                 "remaining_model_calls": policy.max_model_calls - budget.model_calls,
                 "remaining_seconds": max(0.0, budget.deadline - time.monotonic()),
                 "reconstruction_complete": config.recording_mode == "debug",
@@ -68,7 +70,7 @@ async def plan(goal, snapshot, policy, model, config, budget, recorder, semaphor
                         task_instruction=repair_template if errors else initial_instruction,
                         input_data=data,
                         output_schema=schema,
-                        max_output_tokens=config.max_output_tokens,
+                        max_output_tokens=output_budget,
                         timeout_seconds=min(
                             policy.node_timeout_seconds, budget.deadline - time.monotonic()
                         ),
@@ -172,7 +174,20 @@ async def plan(goal, snapshot, policy, model, config, budget, recorder, semaphor
                     "raw_omitted": not raw_saved,
                 },
             )
-            if not exc.retryable:
+            if exc.code == "MODEL_RESPONSE_TRUNCATED":
+                expanded = expanded_output_budget(output_budget, model)
+                if budget_expanded or expanded <= output_budget or attempt >= policy.max_planning_rounds:
+                    raise RunFailure(exc.code, str(exc), phase="planning", details=exc.details) from exc
+                recovery_ref = f"planning/output-budget-{attempt + 1:02d}.json"
+                recorder.write(recovery_ref, {
+                    "role": "planner", "previous_budget": output_budget,
+                    "max_output_tokens": expanded,
+                })
+                recorder.event("model_output_budget_expanded", attempt=attempt + 1,
+                               payload_ref=recovery_ref)
+                output_budget = expanded
+                budget_expanded = True
+            elif not exc.retryable:
                 raise RunFailure(exc.code, str(exc), phase="planning", details=exc.details) from exc
             if exc.code in {"MODEL_RESPONSE_INVALID", "MODEL_RESPONSE_TRUNCATED"}:
                 message = "Return a complete valid response"

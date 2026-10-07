@@ -22,7 +22,7 @@ class LangChainModelClient:
         mode="function_calling",
         allow_json_mode=False,
         chat_model=None,
-        max_output_tokens=16384,
+        max_output_tokens=32768,
         enforce_output_budget=True,
     ):
         if mode not in {"function_calling", "json_schema", "json_mode"}:

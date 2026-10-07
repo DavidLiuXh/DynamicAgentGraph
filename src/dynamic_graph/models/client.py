@@ -67,3 +67,13 @@ class FakeModelClient:
 class ModelBindings:
     planner: ModelClient
     worker: ModelClient
+
+
+def expanded_output_budget(current: int, model: ModelClient) -> int:
+    """One bounded recovery budget, respecting a client's explicit transport cap."""
+    ceiling = 32768
+    metadata = getattr(model, "metadata", {})
+    cap = metadata.get("max_output_tokens") if isinstance(metadata, dict) else None
+    if type(cap) is int and cap > 0:
+        ceiling = min(ceiling, cap)
+    return max(current, min(current * 2, ceiling))

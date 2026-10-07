@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from ..contracts import CallContext, EngineConfig, ExecutionPolicy, GoalSpec
 from ..execution.errors import RunFailure, ToolCallError
 from ..execution.privacy import contains_sensitive
-from ..models.client import ModelBindings, ModelCallError, ModelRequest
+from ..models.client import ModelBindings, ModelCallError, ModelRequest, expanded_output_budget
 from .schemas import SchemaError, canonical, resolve, validate_value
 from .state import unwrap
 from .validation import binding_value
@@ -77,6 +77,8 @@ def build_node(node, runtime):
             ) from exc
         entry = ctx.snapshot.entries.get(node.capability.key) if node.capability else None
         feedback = []
+        output_budget = ctx.config.max_output_tokens
+        budget_expanded = False
         try:
             async with asyncio.timeout_at(deadline) as node_timer:
                 for attempt in range(1, ctx.policy.max_node_attempts + 1):
@@ -125,7 +127,7 @@ def build_node(node, runtime):
                                             ),
                                             input_data=deepcopy(projected),
                                             output_schema=node.output_schema.document(),
-                                            max_output_tokens=ctx.config.max_output_tokens,
+                                            max_output_tokens=output_budget,
                                             timeout_seconds=deadline - time.monotonic(),
                                         )
                                     )
@@ -246,6 +248,20 @@ def build_node(node, runtime):
                         raise error
                     feedback = [error.code]
                     if error.code == "MODEL_RESPONSE_TRUNCATED":
+                        expanded = expanded_output_budget(output_budget, ctx.models.worker)
+                        if budget_expanded or expanded <= output_budget:
+                            raise error
+                        recovery_ref = f"model-recovery/{node.id}-{attempt + 1}.json"
+                        ctx.recorder.write(recovery_ref, {
+                            "role": "worker", "previous_budget": output_budget,
+                            "max_output_tokens": expanded,
+                        })
+                        ctx.recorder.event(
+                            "model_output_budget_expanded", node_id=node.id,
+                            attempt=attempt + 1, payload_ref=recovery_ref,
+                        )
+                        output_budget = expanded
+                        budget_expanded = True
                         feedback.append(TRUNCATED_RESPONSE_REPAIR)
                     if content_repair:
                         ctx.recorder.event(

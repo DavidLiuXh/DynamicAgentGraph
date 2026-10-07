@@ -146,6 +146,8 @@ async def test_truncated_worker_regenerates_compact_output_within_attempt_budget
     result = await engine.run(goal=goal, policy=policy)
     calls = [request for request in model.requests if request.role == "worker"]
     assert len(calls) == policy.max_node_attempts == 2
+    assert calls[0].max_output_tokens == 16384
+    assert calls[1].max_output_tokens == 32768
     assert calls[0].input_data == calls[1].input_data
     assert calls[0].output_schema == calls[1].output_schema
     assert calls[1].timeout_seconds <= calls[0].timeout_seconds
@@ -323,3 +325,40 @@ async def test_json_syntax_location_reaches_planning_repair_with_original_respon
     assert "Extra data" in repair["validation_errors"][0]["message"]
     assert "27" in repair["validation_errors"][0]["message"]
     assert raw in json.dumps(repair).replace('\\"', '"')
+
+
+@pytest.mark.parametrize("recovered", [False, True])
+async def test_truncated_planner_expands_once_and_preserves_goal(setup_run, reference, recovered):
+    error = ModelCallError("MODEL_RESPONSE_TRUNCATED", "Truncated", retryable=False)
+    engine, goal, policy, model = setup_run([
+        error, envelope(reference) if recovered else error, {"report": "complete"}
+    ])
+    result = await engine.run(goal=goal, policy=policy)
+    calls = [r for r in model.requests if r.role == "planner"]
+    assert [r.max_output_tokens for r in calls] == [16384, 32768]
+    assert calls[0].input_data["goal"] == calls[1].input_data["goal"]
+    assert calls[0].output_schema == calls[1].output_schema
+    assert result.usage["model_calls"] == (3 if recovered else 2)
+    if recovered:
+        assert result.execution_status == "COMPLETED" and result.outputs["report"] == "complete"
+    else:
+        assert result.execution_status == "FAILED" and not result.outputs
+        assert result.diagnostics[-1].code == "MODEL_RESPONSE_TRUNCATED"
+
+
+@pytest.mark.parametrize("limit", ["rounds", "model_calls", "transport_cap"])
+async def test_planner_expansion_respects_existing_bounds(setup_run, reference, limit):
+    engine, goal, policy, model = setup_run([
+        ModelCallError("MODEL_RESPONSE_TRUNCATED", "Truncated"), envelope(reference)
+    ])
+    if limit == "transport_cap":
+        model.metadata = {"max_output_tokens": 16384}
+    else:
+        policy = policy.model_copy(update={"max_planning_rounds": 1} if limit == "rounds"
+                                   else {"max_model_calls": 1})
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "FAILED" and not result.outputs
+    assert len(model.requests) == 1
+    assert result.diagnostics[-1].code == (
+        "CALL_BUDGET_EXHAUSTED" if limit == "model_calls" else "MODEL_RESPONSE_TRUNCATED"
+    )

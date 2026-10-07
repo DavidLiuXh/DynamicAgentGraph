@@ -229,3 +229,27 @@ async def test_real_structured_pipeline_binds_each_request_output_limit(monkeypa
     assert limits == ([17, 29] if enforce_budget else [0, 0])
     assert client.metadata["output_budget_enforced"] is enforce_budget
     assert provider.max_tokens is None  # No mutation of a shared provider between concurrent calls.
+
+
+@pytest.mark.parametrize("initial,cap,expected", [
+    (4096, None, 8192), (8192, None, 16384), (16384, None, 32768),
+    (32768, None, 32768), (16384, 20000, 20000), (16384, 16384, 16384),
+])
+def test_expansion_respects_client_cap(initial, cap, expected):
+    from dynamic_graph.models.client import expanded_output_budget
+
+    model = SimpleNamespace(metadata={"max_output_tokens": cap})
+    assert expanded_output_budget(initial, model) == expected
+
+
+async def test_transport_allows_recovery_without_increasing_initial_request():
+    from dataclasses import replace
+
+    provider = FakeProvider(response())
+    client = LangChainModelClient(chat_model=provider)
+    await client.generate(REQUEST)
+    assert provider.configuration["max_tokens"] == 16384
+    await client.generate(replace(REQUEST, max_output_tokens=32768))
+    assert provider.configuration["max_tokens"] == 32768
+    await client.generate(REQUEST)
+    assert provider.configuration["max_tokens"] == 16384
