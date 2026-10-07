@@ -16,6 +16,7 @@ from dynamic_graph import (
     ModelBindings,
 )
 from dynamic_graph.models.adapters import LangChainModelClient
+from dynamic_graph.planning.prompts import resources
 from dynamic_graph.tools import tavily_search_tool, web_fetch_tool
 
 QUERIES = ("places", "species", "access")
@@ -323,7 +324,9 @@ async def test_structural_errors_reach_repair_before_any_tool_runs(
         "compose",
     }
     manifest = json.loads((Path(result.recording["path"]) / "manifest.json").read_text())
-    assert manifest["prompt_version"] == "1.1" and manifest["prompt_language"] == language
+    prompt_metadata = resources(language)[3]
+    assert manifest["prompt_version"] == prompt_metadata["prompt_version"]
+    assert manifest["prompt_language"] == language
 
 
 @pytest.mark.live

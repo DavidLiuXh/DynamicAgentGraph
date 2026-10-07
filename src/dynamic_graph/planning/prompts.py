@@ -48,7 +48,7 @@ def resources(language="zh"):
         repair,
         schema,
         {
-            "prompt_version": "1.1",
+            "prompt_version": "1.2",
             "prompt_language": language,
             "prompt_hash": digest(system.encode()),
             "repair_hash": digest(repair.encode()),

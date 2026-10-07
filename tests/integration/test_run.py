@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from dynamic_graph import CancellationToken, ModelCallError
-from dynamic_graph.execution.errors import RunFailure
+from dynamic_graph import CancellationToken, EngineConfig, ModelCallError
+from dynamic_graph.execution.errors import RunFailure, ToolCallError
 from dynamic_graph.graph.spec import GraphSpec
 from dynamic_graph.recording.local import Recorder
 
@@ -32,6 +32,66 @@ async def test_goal_to_graph_to_result_and_recording(setup_run):
     assert [e["seq"] for e in events] == list(range(1, len(events) + 1))
     assert all(r["commit_state"] == "committed" for r in result.node_records)
     assert all(a["commit_state"] == "committed" for a in result.artifacts)
+
+
+@pytest.mark.parametrize("slot_limit", ["run", "engine"])
+async def test_waiting_for_call_slot_preserves_node_execution_budget(setup_run, tmp_path, slot_limit):
+    async def handler(data, context):
+        await asyncio.sleep(0.3)
+        return {"findings": [{"id": context.node_id, "text": data["query"]}]}
+
+    config = EngineConfig(runs_dir=tmp_path, max_parallelism=1 if slot_limit == "engine" else 8)
+    engine, goal, policy, _ = setup_run(handler=handler, config=config)
+    policy = policy.model_copy(update={
+        "max_parallelism": 1 if slot_limit == "run" else 4,
+        "node_timeout_seconds": 0.5,
+        "run_timeout_seconds": 3,
+    })
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "COMPLETED"
+    assert len(result.outputs["findings"]) == 2
+    tools = [record for record in result.node_records if record["node_id"] in {"search_a", "search_b"}]
+    assert max(record["resource_wait_seconds"] for record in tools) >= 0.25
+    events = [json.loads(line) for line in
+              (Path(result.recording["path"]) / "events.jsonl").read_text().splitlines()]
+    assert any(event["event_type"] == "node_resources_acquired" for event in events)
+
+
+async def test_waiting_for_call_slot_cannot_extend_run_deadline(setup_run):
+    async def handler(data, context):
+        await asyncio.sleep(0.25)
+        return {"findings": [{"id": context.node_id, "text": data["query"]}]}
+
+    engine, goal, policy, model = setup_run(handler=handler)
+    policy = policy.model_copy(update={
+        "max_parallelism": 1, "node_timeout_seconds": 1, "run_timeout_seconds": 0.4,
+    })
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "FAILED"
+    assert result.diagnostics[-1].code == "DEADLINE_EXCEEDED"
+    assert result.outputs == {}
+    assert all(request.role == "planner" for request in model.requests)
+
+
+async def test_retry_keeps_deadline_from_first_resource_acquisition(setup_run):
+    deadlines = []
+
+    async def handler(data, context):
+        if context.node_id == "search_b":
+            return {"findings": [{"id": context.node_id, "text": data["query"]}]}
+        deadlines.append(context.deadline)
+        await asyncio.sleep(0.25)
+        if context.attempt == 1:
+            raise ToolCallError("temporary", retryable=True)
+        return {"findings": [{"id": context.node_id, "text": data["query"]}]}
+
+    engine, goal, policy, _ = setup_run(handler=handler)
+    policy = policy.model_copy(update={"node_timeout_seconds": 0.45, "run_timeout_seconds": 3})
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "FAILED"
+    assert result.diagnostics[-1].code == "DEADLINE_EXCEEDED"
+    assert len(deadlines) == 2 and deadlines[0] == deadlines[1]
+    assert result.outputs == {}
 
 
 async def test_caller_can_revise_goal_as_new_linked_run(setup_run):
@@ -63,6 +123,63 @@ async def test_repair_and_network_retry_share_round_budget(setup_run, reference)
     assert len([r for r in model.requests if r.role == "planner"]) == 3
     assert model.requests[0].input_data["goal"] == model.requests[2].input_data["goal"]
     assert model.requests[2].input_data["repair"]["validation_errors"]
+
+
+@pytest.mark.parametrize("recovered", [False, True])
+@pytest.mark.parametrize("transport_retryable", [False, True])
+async def test_truncated_worker_regenerates_compact_output_within_attempt_budget(
+    setup_run, reference, recovered, transport_retryable
+):
+    error = ModelCallError(
+        "MODEL_RESPONSE_TRUNCATED",
+        "Provider output cut off",
+        retryable=transport_retryable,
+        usage={"input_tokens": 20, "output_tokens": 8},
+    )
+    engine, goal, policy, model = setup_run(
+        [
+            envelope(reference),
+            error,
+            {"report": "compact"} if recovered else error,
+        ]
+    )
+    result = await engine.run(goal=goal, policy=policy)
+    calls = [request for request in model.requests if request.role == "worker"]
+    assert len(calls) == policy.max_node_attempts == 2
+    assert calls[0].max_output_tokens == 16384
+    assert calls[1].max_output_tokens == 32768
+    assert calls[0].input_data == calls[1].input_data
+    assert calls[0].output_schema == calls[1].output_schema
+    assert calls[1].timeout_seconds <= calls[0].timeout_seconds
+    assert "MODEL_RESPONSE_TRUNCATED" in calls[1].task_instruction
+    assert "compact JSON" in calls[1].task_instruction
+    assert "Preserve all required" in calls[1].task_instruction
+    worker = next(node["id"] for node in reference["nodes"] if node["kind"] == "llm")
+    worker_artifacts = [artifact for artifact in result.artifacts if artifact["node_id"] == worker]
+    if recovered:
+        assert result.execution_status == "COMPLETED" and result.output_complete
+        assert result.outputs["report"] == "compact"
+        assert [artifact["attempt"] for artifact in worker_artifacts] == [2]
+    else:
+        assert result.execution_status == "FAILED" and not result.output_complete
+        assert "report" not in result.outputs and len(result.outputs["findings"]) == 2
+        assert not worker_artifacts
+        assert result.diagnostics[-1].code == "MODEL_RESPONSE_TRUNCATED"
+
+
+@pytest.mark.parametrize("limit", ["attempts", "model_calls"])
+async def test_content_regeneration_cannot_bypass_execution_budgets(setup_run, reference, limit):
+    error = ModelCallError("MODEL_RESPONSE_TRUNCATED", "Truncated", retryable=False)
+    engine, goal, policy, model = setup_run([envelope(reference), error, {"report": "compact"}])
+    policy = policy.model_copy(update={"max_node_attempts": 1} if limit == "attempts"
+                               else {"max_model_calls": 2})
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "FAILED" and not result.output_complete
+    assert len([r for r in model.requests if r.role == "worker"]) == 1
+    assert "report" not in result.outputs
+    assert result.diagnostics[-1].code == (
+        "MODEL_RESPONSE_TRUNCATED" if limit == "attempts" else "CALL_BUDGET_EXHAUSTED"
+    )
 
 
 async def test_blocked_is_terminal_without_graph_or_tools(setup_run):
@@ -188,3 +305,60 @@ async def test_strict_unenforceable_budget_rejected_before_call(setup_run, limit
     result = await engine.run(goal=goal, policy=policy)
     assert result.diagnostics[-1].code == "BUDGET_UNENFORCEABLE"
     assert not model.requests
+
+
+async def test_json_syntax_location_reaches_planning_repair_with_original_response(
+    setup_run, reference
+):
+    raw = '{"response_version": "1.0"}}, "graph": {}}'
+    failure = ModelCallError(
+        "MODEL_RESPONSE_INVALID",
+        "Invalid JSON",
+        retryable=True,
+        raw_response=raw,
+        details={"json_syntax": {"message": "Extra data", "line": 1, "column": 27, "position": 26}},
+    )
+    engine, goal, policy, model = setup_run([failure, envelope(reference), {"report": "repaired"}])
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "COMPLETED"
+    repair = model.requests[1].input_data["repair"]
+    assert "Extra data" in repair["validation_errors"][0]["message"]
+    assert "27" in repair["validation_errors"][0]["message"]
+    assert raw in json.dumps(repair).replace('\\"', '"')
+
+
+@pytest.mark.parametrize("recovered", [False, True])
+async def test_truncated_planner_expands_once_and_preserves_goal(setup_run, reference, recovered):
+    error = ModelCallError("MODEL_RESPONSE_TRUNCATED", "Truncated", retryable=False)
+    engine, goal, policy, model = setup_run([
+        error, envelope(reference) if recovered else error, {"report": "complete"}
+    ])
+    result = await engine.run(goal=goal, policy=policy)
+    calls = [r for r in model.requests if r.role == "planner"]
+    assert [r.max_output_tokens for r in calls] == [16384, 32768]
+    assert calls[0].input_data["goal"] == calls[1].input_data["goal"]
+    assert calls[0].output_schema == calls[1].output_schema
+    assert result.usage["model_calls"] == (3 if recovered else 2)
+    if recovered:
+        assert result.execution_status == "COMPLETED" and result.outputs["report"] == "complete"
+    else:
+        assert result.execution_status == "FAILED" and not result.outputs
+        assert result.diagnostics[-1].code == "MODEL_RESPONSE_TRUNCATED"
+
+
+@pytest.mark.parametrize("limit", ["rounds", "model_calls", "transport_cap"])
+async def test_planner_expansion_respects_existing_bounds(setup_run, reference, limit):
+    engine, goal, policy, model = setup_run([
+        ModelCallError("MODEL_RESPONSE_TRUNCATED", "Truncated"), envelope(reference)
+    ])
+    if limit == "transport_cap":
+        model.metadata = {"max_output_tokens": 16384}
+    else:
+        policy = policy.model_copy(update={"max_planning_rounds": 1} if limit == "rounds"
+                                   else {"max_model_calls": 1})
+    result = await engine.run(goal=goal, policy=policy)
+    assert result.execution_status == "FAILED" and not result.outputs
+    assert len(model.requests) == 1
+    assert result.diagnostics[-1].code == (
+        "CALL_BUDGET_EXHAUSTED" if limit == "model_calls" else "MODEL_RESPONSE_TRUNCATED"
+    )

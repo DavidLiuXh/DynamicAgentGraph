@@ -22,7 +22,8 @@ class LangChainModelClient:
         mode="function_calling",
         allow_json_mode=False,
         chat_model=None,
-        max_output_tokens=16384,
+        max_output_tokens=32768,
+        enforce_output_budget=True,
     ):
         if mode not in {"function_calling", "json_schema", "json_mode"}:
             raise ValueError("Unsupported structured output mode")
@@ -31,6 +32,9 @@ class LangChainModelClient:
         self.mode = mode
         self.model = model
         self.max_output_tokens = max_output_tokens
+        # Opt-out is used by frozen evaluation graders whose historical HTTP
+        # request omitted this parameter; product clients enforce it by default.
+        self.enforce_output_budget = enforce_output_budget
         if chat_model is None:
             from langchain_openai import ChatOpenAI
 
@@ -52,8 +56,9 @@ class LangChainModelClient:
         return {
             "model": self.model,
             "mode": self.mode,
-            "adapter_version": "1.0",
-            "max_output_tokens": self.max_output_tokens,
+            "adapter_version": "1.1",
+            "max_output_tokens": self.max_output_tokens if self.enforce_output_budget else None,
+            "output_budget_enforced": self.enforce_output_budget,
         }
 
     async def generate(self, request: ModelRequest) -> ModelResponse:
@@ -97,9 +102,13 @@ class LangChainModelClient:
                 schema,
                 method=self.mode,
                 include_raw=True,
+                **({"max_tokens": min(request.max_output_tokens, self.max_output_tokens)}
+                   if self.enforce_output_budget else {}),
             )
             async with asyncio.timeout(request.timeout_seconds):
-                response = await runnable.ainvoke(messages, max_tokens=request.max_output_tokens)
+                # include_raw creates a RunnableParallel that drops invocation
+                # kwargs. Bind generation parameters before composing the parser.
+                response = await runnable.ainvoke(messages)
         except asyncio.CancelledError:
             raise
         except TimeoutError as exc:
@@ -108,6 +117,23 @@ class LangChainModelClient:
             ) from exc
         except Exception as exc:
             # Never expose raw provider exceptions: they can embed request bodies or credentials.
+            # Some SDKs reject truncated structured output before returning the
+            # raw message. Preserve the same classification as the raw path.
+            completion = getattr(exc, "completion", None)
+            if any(
+                getattr(choice, "finish_reason", None) in {"length", "max_tokens"}
+                for choice in getattr(completion, "choices", ())
+            ):
+                token_usage = getattr(completion, "usage", None)
+                raise ModelCallError(
+                    "MODEL_RESPONSE_TRUNCATED",
+                    "Model response was truncated",
+                    usage={
+                        "input_tokens": getattr(token_usage, "prompt_tokens", None),
+                        "output_tokens": getattr(token_usage, "completion_tokens", None),
+                    },
+                    provider_request_id=getattr(completion, "id", None),
+                ) from exc
             status = getattr(exc, "status_code", None)
             body = getattr(exc, "body", {}) or {}
             code = body.get("code", "") if isinstance(body, dict) else ""
@@ -160,7 +186,6 @@ class LangChainModelClient:
             raise ModelCallError(
                 "MODEL_RESPONSE_TRUNCATED",
                 "Model response was truncated",
-                retryable=True,
                 usage=usage,
                 provider_request_id=request_id,
             )
@@ -171,9 +196,27 @@ class LangChainModelClient:
             if isinstance(arguments, str):
                 raw_response = arguments
                 break
+        invalid_calls = getattr(raw, "invalid_tool_calls", []) or []
+        if invalid_calls:
+            arguments = invalid_calls[0].get("args")
+            if isinstance(arguments, str):
+                raw_response = arguments
         if not isinstance(raw_response, str):
             raw_response = None
-        if response.get("parsing_error") is not None or payload is None:
+        if invalid_calls or response.get("parsing_error") is not None or payload is None:
+            details = {}
+            if raw_response:
+                try:
+                    strict_loads(raw_response)
+                except json.JSONDecodeError as error:
+                    details["json_syntax"] = {
+                        "message": error.msg,
+                        "line": error.lineno,
+                        "column": error.colno,
+                        "position": error.pos,
+                    }
+                except ValueError:
+                    details["json_syntax"] = {"message": "Invalid strict JSON"}
             raise ModelCallError(
                 "MODEL_RESPONSE_INVALID",
                 "Structured response could not be parsed",
@@ -181,6 +224,7 @@ class LangChainModelClient:
                 usage=usage,
                 provider_request_id=request_id,
                 raw_response=raw_response,
+                details=details,
             )
         if isinstance(payload, BaseModel):
             payload = payload.model_dump(mode="json")

@@ -102,6 +102,38 @@ async def test_response_failure_classification(case, expected):
     assert caught.value.code == expected
 
 
+async def test_sdk_length_exception_preserves_usage_without_retrying_partial_json():
+    from openai import LengthFinishReasonError
+    from openai.types.chat import ChatCompletion
+
+    completion = ChatCompletion(
+        id="truncated-request", object="chat.completion", created=0, model="test",
+        choices=[{"index": 0, "finish_reason": "length", "message": {
+            "role": "assistant", "content": '{"unfinished":',
+        }}],
+        usage={"prompt_tokens": 10, "completion_tokens": 2048, "total_tokens": 2058},
+    )
+    provider = FakeProvider(exception=LengthFinishReasonError(completion=completion))
+    with pytest.raises(ModelCallError) as caught:
+        await LangChainModelClient(chat_model=provider).generate(REQUEST)
+    error = caught.value
+    assert error.code == "MODEL_RESPONSE_TRUNCATED"
+    assert error.retryable is False
+    assert error.usage == {"input_tokens": 10, "output_tokens": 2048}
+    assert error.provider_request_id == "truncated-request"
+    assert error.raw_response is None
+    assert provider.calls == 1
+
+
+async def test_raw_response_truncation_does_not_retry_the_same_output_budget():
+    data = response()
+    data["raw"].response_metadata["finish_reason"] = "length"
+    with pytest.raises(ModelCallError) as caught:
+        await LangChainModelClient(chat_model=FakeProvider(data)).generate(REQUEST)
+    assert caught.value.code == "MODEL_RESPONSE_TRUNCATED"
+    assert caught.value.retryable is False
+
+
 async def test_cancellation_is_not_normalized():
     provider = FakeProvider(exception=asyncio.CancelledError())
     with pytest.raises(asyncio.CancelledError):
@@ -144,3 +176,80 @@ async def test_duplicate_json_keys_are_not_accepted_after_provider_parse():
     with pytest.raises(ModelCallError) as caught:
         await LangChainModelClient(chat_model=provider).generate(REQUEST)
     assert caught.value.code == "MODEL_RESPONSE_INVALID"
+
+
+@pytest.mark.parametrize("parsed", [None, {"partial": "not a complete response"}])
+async def test_invalid_normalized_tool_arguments_are_rejected_and_available_for_repair(parsed):
+    data = response(parsed=parsed)
+    data["raw"].content = ""
+    data["raw"].invalid_tool_calls = [
+        {"name": "StructuredResponse", "args": '{"answer": broken}', "error": "parser diagnostic"}
+    ]
+    provider = FakeProvider(data)
+    with pytest.raises(ModelCallError) as caught:
+        await LangChainModelClient(chat_model=provider).generate(REQUEST)
+    assert caught.value.code == "MODEL_RESPONSE_INVALID" and caught.value.retryable
+    assert caught.value.raw_response == '{"answer": broken}'
+    assert caught.value.details["json_syntax"]["position"] == 11
+    assert caught.value.details["json_syntax"]["line"] == 1
+    assert "parser diagnostic" not in str(caught.value)
+
+
+@pytest.mark.parametrize("mode", ["json_mode", "function_calling"])
+@pytest.mark.parametrize("enforce_budget", [True, False])
+async def test_real_structured_pipeline_binds_each_request_output_limit(monkeypatch, mode, enforce_budget):
+    import json
+    from dataclasses import replace
+
+    import httpx
+    from langchain_openai import ChatOpenAI
+
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    bodies = []
+
+    async def send(request):
+        bodies.append(json.loads(request.content))
+        message = {"role": "assistant", "content": "{}"}
+        if mode == "function_calling":
+            message = {"role": "assistant", "content": None, "tool_calls": [
+                {"id": "test-call", "type": "function", "function": {"name": "StructuredResponse", "arguments": "{}"}}
+            ]}
+        return httpx.Response(200, request=request, json={
+            "id": "test", "object": "chat.completion", "created": 1, "model": "test-model",
+            "choices": [{"index": 0, "finish_reason": "stop", "message": message}],
+        })
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(send)) as http_client:
+        provider = ChatOpenAI(model="test-model", max_retries=0, http_async_client=http_client)
+        client = LangChainModelClient(chat_model=provider, mode=mode, allow_json_mode=mode == "json_mode", enforce_output_budget=enforce_budget)
+        await asyncio.gather(*(
+            client.generate(replace(REQUEST, max_output_tokens=limit)) for limit in (17, 29)
+        ))
+    limits = sorted(body.get("max_completion_tokens", body.get("max_tokens", 0)) for body in bodies)
+    assert limits == ([17, 29] if enforce_budget else [0, 0])
+    assert client.metadata["output_budget_enforced"] is enforce_budget
+    assert provider.max_tokens is None  # No mutation of a shared provider between concurrent calls.
+
+
+@pytest.mark.parametrize("initial,cap,expected", [
+    (4096, None, 8192), (8192, None, 16384), (16384, None, 32768),
+    (32768, None, 32768), (16384, 20000, 20000), (16384, 16384, 16384),
+])
+def test_expansion_respects_client_cap(initial, cap, expected):
+    from dynamic_graph.models.client import expanded_output_budget
+
+    model = SimpleNamespace(metadata={"max_output_tokens": cap})
+    assert expanded_output_budget(initial, model) == expected
+
+
+async def test_transport_allows_recovery_without_increasing_initial_request():
+    from dataclasses import replace
+
+    provider = FakeProvider(response())
+    client = LangChainModelClient(chat_model=provider)
+    await client.generate(REQUEST)
+    assert provider.configuration["max_tokens"] == 16384
+    await client.generate(replace(REQUEST, max_output_tokens=32768))
+    assert provider.configuration["max_tokens"] == 32768
+    await client.generate(REQUEST)
+    assert provider.configuration["max_tokens"] == 16384
