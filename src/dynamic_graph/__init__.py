@@ -5,6 +5,7 @@ __version__ = "0.1.0"
 from .api import DynamicGraphEngine
 from .capabilities.registry import EvaluatorDefinition, ReducerDefinition, ToolDefinition
 from .contracts import CancellationToken, EngineConfig, ExecutionPolicy, GoalSpec, RunResult
+from .graph.spec import GraphSpec
 from .models.client import (
     FakeModelClient,
     ModelBindings,
@@ -21,6 +22,7 @@ __all__ = [
     "ExecutionPolicy",
     "FakeModelClient",
     "GoalSpec",
+    "GraphSpec",
     "ModelBindings",
     "ModelCallError",
     "ModelRequest",

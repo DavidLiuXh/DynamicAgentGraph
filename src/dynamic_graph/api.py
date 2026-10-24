@@ -67,6 +67,15 @@ class DynamicGraphEngine:
     async def run(self, *, goal, policy=None, cancellation_token=None):
         return await self._run(goal=goal, policy=policy, cancellation_token=cancellation_token)
 
+    async def run_graph(self, *, goal, graph_spec, policy=None, cancellation_token=None):
+        """Validate and execute a caller-supplied graph without invoking the planner."""
+        from .graph.spec import GraphSpec
+
+        graph_spec = GraphSpec.model_validate(graph_spec.document())
+        return await self._run(
+            goal=goal, policy=policy, cancellation_token=cancellation_token, graph_spec=graph_spec
+        )
+
     async def _run(self, *, goal, policy=None, cancellation_token=None, graph_spec=None):
         run = _Run(self, goal, policy, cancellation_token)
         return await run.run(graph_spec)
