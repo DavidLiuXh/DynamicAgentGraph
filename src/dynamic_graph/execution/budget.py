@@ -12,6 +12,7 @@ class Budget:
         self.lock = asyncio.Lock()
         self.model_calls = self.tool_calls = 0
         self.usage = []
+        self.before_dispatch = None
 
     def check(self):
         if self.token.cancelled:
@@ -19,7 +20,7 @@ class Budget:
         if time.monotonic() >= self.deadline:
             raise RunFailure("DEADLINE_EXCEEDED", "Run deadline reached")
 
-    async def reserve(self, kind):
+    async def reserve(self, kind, *, node_id=None, attempt=None, side_effect=False):
         async with self.lock:
             self.check()
             key = "model_calls" if kind == "model" else "tool_calls"
@@ -27,6 +28,32 @@ class Budget:
             if getattr(self, key) >= limit:
                 raise RunFailure("CALL_BUDGET_EXHAUSTED", "Call budget exhausted")
             setattr(self, key, getattr(self, key) + 1)
+            if self.before_dispatch is not None:
+                self.before_dispatch(node_id, attempt, side_effect)
+
+    def checkpoint(self):
+        return {
+            **self.clock(),
+            "model_calls": self.model_calls, "tool_calls": self.tool_calls,
+            "usage": self.usage,
+        }
+
+    def clock(self):
+        now = time.monotonic()
+        return {
+            "elapsed_seconds": now - self.started,
+            "remaining_seconds": max(0, self.deadline - now),
+        }
+
+    def restore(self, state):
+        now = time.monotonic()
+        elapsed = state["elapsed_seconds"]
+        remaining = min(max(0, self.policy.run_timeout_seconds - elapsed), state["remaining_seconds"])
+        self.started = now - elapsed
+        self.deadline = now + remaining
+        self.model_calls = state["model_calls"]
+        self.tool_calls = state["tool_calls"]
+        self.usage = state["usage"]
 
     def summary(self):
         result = {

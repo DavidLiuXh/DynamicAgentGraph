@@ -59,6 +59,8 @@ def build_node(node, runtime):
         if runtime is None:
             raise RuntimeError("Offline-compiled graph has no execution context")
         ctx = runtime
+        if node.id in state.get("__committed_nodes", {}):
+            return {}
         record = ctx.records[node.id]
         record["started_after_seconds"] = time.monotonic() - ctx.budget.started
         # Queueing is bounded by the run deadline. Start the shared node budget
@@ -81,7 +83,10 @@ def build_node(node, runtime):
         budget_expanded = False
         try:
             async with asyncio.timeout_at(deadline) as node_timer:
-                for attempt in range(1, ctx.policy.max_node_attempts + 1):
+                first_attempt = record["attempts"] + 1
+                if first_attempt > ctx.policy.max_node_attempts:
+                    raise RunFailure("NODE_ATTEMPTS_EXHAUSTED", "No node attempts remain", node_id=node.id)
+                for attempt in range(first_attempt, ctx.policy.max_node_attempts + 1):
                     ctx.budget.check()
                     record.update(
                         {"attempts": attempt, "status": "running", "commit_state": "uncommitted"}
@@ -105,14 +110,17 @@ def build_node(node, runtime):
                             ctx.recorder.event(
                                 "node_resources_acquired", node_id=node.id, attempt=attempt
                             )
-                            if attempt == 1:
+                            if attempt == first_attempt:
                                 deadline = min(
                                     ctx.budget.deadline, acquired + ctx.policy.node_timeout_seconds
                                 )
                                 if entry and entry.timeout_hint is not None:
                                     deadline = min(deadline, acquired + entry.timeout_hint)
                                 node_timer.reschedule(deadline)
-                            await ctx.budget.reserve("model" if node.kind == "llm" else "tool")
+                            await ctx.budget.reserve(
+                                "model" if node.kind == "llm" else "tool", node_id=node.id,
+                                attempt=attempt, side_effect=bool(entry and not entry.read_only),
+                            )
                             if node.kind == "llm":
                                 try:
                                     response = await ctx.models.worker.generate(

@@ -1,0 +1,9 @@
+# Execution recovery
+
+On POSIX, pass a synchronous `on_run_started(run_id)` callback to `run` or `run_graph` to opt into recovery. The engine calls it once, after validation and after saving the initial checkpoint and before dispatching any execution node. The caller can commit the run ID to its own durable task record. An exception from the callback stops execution.
+
+Use `await engine.resume(run_id=run_id, policy=current_policy)` to recover the same run. A run lock excludes concurrent recovery. The engine revalidates the saved graph against the current capability registry and the intersection of the original and current permissions. Capability snapshot changes block recovery. Limits can be tightened, and previously dispatched calls and node attempts still count. Active time is sampled each second and at durable execution boundaries. Downtime is excluded. Abrupt exit can leave an unsampled interval since the last saved time.
+
+The engine commits checkpoints after complete LangGraph supersteps. Committed nodes reuse their saved outputs. Interrupted read-only and model calls may run again under the remaining budget. A side-effecting dispatch is durably marked before the handler is called. Recovery raises `RESUME_SIDE_EFFECT_UNCERTAIN` if any such dispatch lacks a committed result. This includes tools marked idempotent. This version has no automatic reconciliation for those operations.
+
+Private checkpoint files retain validated execution values in the protected run directory, separate from redacted public run records. Restricted values fail checkpoint writes. Keep the run directory available for recovery. Existing runs created without the callback retain the normal recording behavior. Recovery preflight failures raise `RunFailure` and leave the checkpoint available for inspection or another authorized attempt.
