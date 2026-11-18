@@ -6,6 +6,8 @@ from ..execution.errors import RunFailure
 
 def make_cell_reducer(bound, field_name):
     def merge(previous, incoming):
+        if incoming["kind"] == "restore" and not previous:
+            return {"kind": "value", "value": deepcopy(incoming["value"])}
         if incoming["kind"] == "init":
             if previous:
                 raise RunFailure("REDUCER_FAILED", "State initialized twice")
