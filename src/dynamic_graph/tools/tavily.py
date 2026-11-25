@@ -45,11 +45,12 @@ OUTPUT_SCHEMA = {
 }
 
 
-def tavily_search_tool(*, api_key: str | None = None) -> ToolDefinition:
+def tavily_search_tool(*, api_key: str | None = None, trust_env: bool = True) -> ToolDefinition:
     """Bind a key (or TAVILY_API_KEY) without exposing it in capability metadata.
 
     Each handler attempt makes one request. The engine owns retries, concurrency,
     cancellation and the deadline. No network request occurs at registration.
+    Set trust_env=False to ignore HTTPX environment proxies and certificate settings.
     """
     key = api_key if api_key is not None else os.environ.get("TAVILY_API_KEY")
     if not isinstance(key, str) or not key.strip():
@@ -71,7 +72,9 @@ def tavily_search_tool(*, api_key: str | None = None) -> ToolDefinition:
             "include_images": False,
         }
         try:
-            async with httpx.AsyncClient(timeout=remaining, follow_redirects=False) as client:
+            async with httpx.AsyncClient(
+                timeout=remaining, follow_redirects=False, trust_env=trust_env,
+            ) as client:
                 response = await client.post(
                     "https://api.tavily.com/search",
                     headers={"Authorization": f"Bearer {key}"},
