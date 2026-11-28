@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from ..contracts import CallContext, EngineConfig, ExecutionPolicy, GoalSpec
 from ..execution.errors import RunFailure, ToolCallError
-from ..execution.privacy import contains_sensitive
+from ..execution.privacy import contains_sensitive, redact_sensitive
 from ..models.client import ModelBindings, ModelCallError, ModelRequest, expanded_output_budget
 from .schemas import SchemaError, canonical, resolve, validate_value
 from .state import unwrap
@@ -226,6 +226,9 @@ def build_node(node, runtime):
                             "Registered tool failed",
                             node_id=node.id,
                             retryable=exc.retryable and entry.idempotent,
+                            details=redact_sensitive({
+                                **exc.details, "tool": node.capability.key, "reason_code": exc.code,
+                            }, ctx.config.sensitive_values),
                         )
                     except RunFailure as exc:
                         error = exc
